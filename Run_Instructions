@@ -1,0 +1,10 @@
+From parent directory of project(tweet_irony_detection) :
+python -m tweet_irony_detection.baseline.features
+
+Dependencies:
+Python 3.7.2
+conda packages are in requirements
+
+Instructions on creating conda env:
+conda create -n name python=3.7.2
+conda install -n name --file=requirements
