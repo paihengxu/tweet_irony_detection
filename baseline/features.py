@@ -24,9 +24,10 @@ if __name__ == '__main__':
     fp_labels_B='tweet_irony_detection/goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
 
     # Training data for task A and B , test data is same & correct labels for both tasks
-    train_A=read_non_emoji_tweets(fp_train_A,"train")
-    train_B = read_non_emoji_tweets(fp_train_B,"train")
-    test= read_non_emoji_tweets(fp_test,"test")
+    pre_process_url=True # Set to remove URLs
+    train_A=read_non_emoji_tweets(fp_train_A,"train",pre_process_url)
+    train_B = read_non_emoji_tweets(fp_train_B,"train",pre_process_url)
+    test= read_non_emoji_tweets(fp_test,"test",pre_process_url)
 
     labels_A=get_label(fp_labels_A)
     labels_B = get_label(fp_labels_B)
