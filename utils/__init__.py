@@ -17,7 +17,6 @@ class Tweet(NamedTuple):
                 f"tweet_label: {self.tweet_label}\n" +
                 f"tweet_text: {self.tweet_text}")
 
-urls=0
 
 def pre_process_tweet_url(text):
     '''
@@ -26,14 +25,10 @@ def pre_process_tweet_url(text):
     :return: processed_text:
     '''
     processed_text=text
-    global urls
-    urls += 1
     if re.match(r"^.*http[s]*://",text):
         processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text);
-        # print(f'{urls}: {text}')
-        # print(f'{urls}: {processed_text} \n')
-        if re.match(r"^.*http[s]*://",processed_text):
-            print("\n***********SAHITI ALARM************")
+        # print(f'pre-process: {text}')
+        # print(f'post-process:{processed_text} \n')
     return processed_text
 
 def read_non_emoji_tweets(fp,type,pre_process_url):
