@@ -16,7 +16,7 @@ class Tweet(NamedTuple):
                 f"tweet_text: {self.tweet_text}")
 
 
-def read_non_emoji_train_tweets(fp):
+def read_non_emoji_tweets(fp,type):
     tweets=[]
     with open(fp,encoding='utf8') as f:
         for line in f:
@@ -24,22 +24,13 @@ def read_non_emoji_train_tweets(fp):
             if not line.lower().startswith("tweet"):
                 split=line.split("\t")
                 id=int(split[0])
-                label=int(split[1])
-                text=split[2]
-
-
+                if type.lower()=="train":
+                    label=int(split[1])
+                    text=split[2]
+                else:
+                    label = None
+                    text = split[1]
                 tweets.append(Tweet(id,label,text))
     return tweets
 
-def read_non_emoji_test_tweets(fp):
-    tweets=[]
-    with open(fp,encoding='utf8') as f:
-        for line in f:
-            line=line.strip()
-            if not line.lower().startswith("tweet"):
-                split=line.split("\t")
-                id=int(split[0])
-                label=None
-                text=split[1]
-                tweets.append(Tweet(id,label,text))
-    return tweets
+
