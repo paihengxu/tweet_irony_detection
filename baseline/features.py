@@ -2,7 +2,7 @@ import pickle
 
 from ..utils import read_non_emoji_tweets
 from ..utils import get_label
-from ..utils import print_data_stats
+from ..utils import print_class_stats
 
 
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     labels_B = get_label(fp_labels_B)
 
 
-    print_data_stats(train_A,train_B,labels_A,labels_B)
+    print_class_stats(train_A,train_B,labels_A,labels_B)
 
 
 

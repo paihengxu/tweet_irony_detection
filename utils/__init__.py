@@ -1,4 +1,5 @@
 from typing import Dict, List, NamedTuple
+from collections import Counter
 from nltk.tokenize import word_tokenize
 
 class Tweet(NamedTuple):
@@ -55,5 +56,15 @@ def get_label(fp):
     return labels
 
 
-def print_data_stats(train_A,train_B,labels_A,labels_B):
+def print_class_stats(train_A,train_B,labels_A,labels_B):
+    labels_train_A=[tweet.tweet_label for tweet in train_A]
+    labels_train_B = [tweet.tweet_label for tweet in train_B]
+    labels_test_A=labels_A.values()
+    labels_test_B = labels_B.values()
+    print(Counter(labels_train_A))
+    print(Counter(labels_train_B))
+    print(Counter(labels_test_A))
+    print(Counter(labels_test_B))
+
+
     pass
