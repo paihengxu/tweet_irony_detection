@@ -17,6 +17,11 @@ class Tweet(NamedTuple):
 
 
 def read_non_emoji_tweets(fp,type):
+    '''
+    :param fp: file path
+    :param type: either train or test data
+    :return: List of Tweet
+    '''
     tweets=[]
     with open(fp,encoding='utf8') as f:
         for line in f:
@@ -33,4 +38,22 @@ def read_non_emoji_tweets(fp,type):
                 tweets.append(Tweet(id,label,text))
     return tweets
 
+def get_label(fp):
+    '''
+    :param fp: Takes gold test data set
+    :return: labels dict {tweet_id: label}
+    '''
+    labels={}
+    with open(fp,encoding='utf8') as f:
+        for line in f:
+            line=line.strip()
+            if not line.lower().startswith("tweet"):
+                split=line.split("\t")
+                id=int(split[0])
+                label=int(split[1])
+                labels[id]=label
+    return labels
 
+
+def print_data_stats(train_A,train_B,labels_A,labels_B):
+    pass
