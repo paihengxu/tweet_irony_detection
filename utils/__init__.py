@@ -1,3 +1,5 @@
+import re
+
 from typing import Dict, List, NamedTuple
 from collections import Counter
 from nltk.tokenize import word_tokenize
@@ -6,7 +8,6 @@ class Tweet(NamedTuple):
     tweet_id: int
     tweet_label:int
     tweet_text:str
-    # emojis:List[str]
 
     def tweet_words(self):
         return word_tokenize(self.tweet_text)
@@ -17,8 +18,22 @@ class Tweet(NamedTuple):
                 f"tweet_text: {self.tweet_text}")
 
 
-def read_non_emoji_tweets(fp,type):
+def pre_process_tweet_url(text):
     '''
+    1. Remove URLs r"http[s]*://"
+    :param text: takes raw tweet_text
+    :return: processed_text:
+    '''
+    processed_text=text
+    if re.match(r"^.*http[s]*://",text):
+        processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text);
+        # print(f'pre-process: {text}')
+        # print(f'post-process:{processed_text} \n')
+    return processed_text
+
+def read_non_emoji_tweets(fp,type,pre_process_url):
+    '''
+    TODO: some data not in utf8 eg: 355's FOLLOW
     :param fp: file path
     :param type: either train or test data
     :return: List of Tweet
@@ -36,6 +51,8 @@ def read_non_emoji_tweets(fp,type):
                 else:
                     label = None
                     text = split[1]
+                if pre_process_url:
+                    text=pre_process_tweet_url(text)
                 tweets.append(Tweet(id,label,text))
     return tweets
 
