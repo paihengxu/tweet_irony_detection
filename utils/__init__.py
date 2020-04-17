@@ -3,10 +3,12 @@ import re
 from typing import Dict, List, NamedTuple
 from collections import Counter
 from nltk.tokenize import TweetTokenizer
+from nltk.stem.snowball import SnowballStemmer
 
+#  Replace repeated character sequences of length 3 or greater with sequences of length 3.
 tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
+stemmer = SnowballStemmer('english')
 # TODO: Check on USR in test id - 147,148,160,230,319,336.398
-# TODO: Replace repeated character sequences of length 3 or greater with sequences of length 3.
 
 class Tweet(NamedTuple):
     tweet_id: int
@@ -94,3 +96,9 @@ def print_class_stats(train_A,train_B,labels_A,labels_B):
     print('For Task B training ',Counter(labels_train_B))
     print('For Task A testing ',Counter(labels_test_A))
     print('For Task B testing ',Counter(labels_test_B))
+
+def do_stemming(text):
+    words=tknzr.tokenize(text)
+    stemmed=[stemmer.stem(word) for word in words]
+    return stemmed
+
