@@ -6,8 +6,6 @@ from utils import print_class_stats
 
 
 def extract_ngrams():
-    # TODO: how to deal with urls
-
     pass
 
 def brown_cluster_ngrams():
@@ -21,20 +19,23 @@ if __name__ == '__main__':
     # fp_train_A = 'tweet_irony_detection/train/SemEval2018-T3-train-taskA.txt'
     fp_train_A = '../train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = '../train/SemEval2018-T3-train-taskB.txt'
-    fp_test = '../test_TaskA/SemEval2018-T3_input_test_taskA.txt'
+    fp_test_A = 'tweet_irony_detection/test_TaskA/SemEval2018-T3_input_test_taskA.txt'
+    fp_test_B = 'tweet_irony_detection/test_TaskB/SemEval2018-T3_input_test_taskB.txt'
     fp_labels_A= '../goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
     fp_labels_B='../goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
 
-    # Training data for task A and B , test data is same & correct labels for both tasks
+    # Training data for task A and B , test data & correct labels for both tasks
     pre_process_url=True # Set to remove URLs
     train_A = read_non_emoji_tweets(fp_train_A,"train",pre_process_url)
     train_B = read_non_emoji_tweets(fp_train_B,"train",pre_process_url)
-    test= read_non_emoji_tweets(fp_test,"test",pre_process_url)
 
-    labels_A = get_label(fp_labels_A)
+    test_A= read_non_emoji_tweets(fp_test_A,"test",pre_process_url)
+    test_B = read_non_emoji_tweets(fp_test_B, "test", pre_process_url)
+    labels_A=get_label(fp_labels_A)
     labels_B = get_label(fp_labels_B)
-
+    # Print class stats
     print_class_stats(train_A,train_B,labels_A,labels_B)
+
 
     # unit test for features
     # extract_ngrams()
