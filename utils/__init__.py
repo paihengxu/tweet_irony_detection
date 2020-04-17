@@ -5,8 +5,8 @@ from collections import Counter
 from nltk.tokenize import TweetTokenizer
 
 tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
-# Remove Twitter username handles from text.
-# Replace repeated character sequences of length 3 or greater with sequences of length 3.
+# TODO: Check on USR in test id - 147,148,160,230,319,336.398
+# TODO: Replace repeated character sequences of length 3 or greater with sequences of length 3.
 
 class Tweet(NamedTuple):
     tweet_id: int
@@ -28,16 +28,22 @@ def pre_process_tweet_url(text):
     :param text: takes raw tweet_text
     :return: processed_text:
     '''
-    processed_text=text
-    if re.match(r"^.*http[s]*://",text):
-        processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text);
-        # print(f'pre-process: {text}')
-        # print(f'post-process:{processed_text} \n')
+    processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text);
+    # print(f'pre-process: {text}')
+    # print(f'post-process:{processed_text} \n')
     return processed_text
 
-def read_non_emoji_tweets(fp,type,pre_process_url):
+
+def pre_process_usrname(text):
+    processed_text = re.sub(r"@\w+", "*USR*", text);
+    # print(f'{count}:pre-process: {text}')
+    # print(f'{count}:post-process:{processed_text} \n')
+    return processed_text
+
+
+def read_non_emoji_tweets(fp,type,pre_process_url,pre_process_usr):
     '''
-    TODO: some data not in utf8 eg: 355's FOLLOW
+    TODO: some data not in utf8 eg: 355's FOLLOW, so issues when print
     :param fp: file path
     :param type: either train or test data
     :return: List of Tweet
@@ -57,6 +63,8 @@ def read_non_emoji_tweets(fp,type,pre_process_url):
                     text = split[1]
                 if pre_process_url:
                     text=pre_process_tweet_url(text)
+                if pre_process_usr:
+                    text=pre_process_usrname(text)
                 tweets.append(Tweet(id,label,text))
     return tweets
 
