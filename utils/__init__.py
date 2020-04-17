@@ -2,7 +2,11 @@ import re
 
 from typing import Dict, List, NamedTuple
 from collections import Counter
-from nltk.tokenize import word_tokenize
+from nltk.tokenize import TweetTokenizer
+
+tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
+# Remove Twitter username handles from text.
+# Replace repeated character sequences of length 3 or greater with sequences of length 3.
 
 class Tweet(NamedTuple):
     tweet_id: int
@@ -10,7 +14,7 @@ class Tweet(NamedTuple):
     tweet_text:str
 
     def tweet_words(self):
-        return word_tokenize(self.tweet_text)
+        return tknzr.tokenize(self.tweet_text)
 
     def __repr__(self):
         return (f"tweet_id: {self.tweet_id}\n" +
