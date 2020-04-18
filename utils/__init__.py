@@ -101,4 +101,3 @@ def do_stemming(text):
     words=tknzr.tokenize(text)
     stemmed=[stemmer.stem(word) for word in words]
     return stemmed
-
