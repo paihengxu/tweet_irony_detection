@@ -163,7 +163,8 @@ def construct_vocabulary(corpus, min_freq=3):
     for tweet in corpus:
         tokens = tweet.tweet_words()
         lower_tokens = [t.lower() for t in tokens]
-        bigram = ngrams(lower_tokens, 2)
+        # add start/end of sentence token
+        bigram = ngrams(['<s>'] + lower_tokens + ['</s>'], 2)
 
         unigram_freq += Counter(lower_tokens)
         bigram_freq += Counter(bigram)
