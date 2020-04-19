@@ -11,8 +11,10 @@ from sentistrength import PySentiStr
 
 
 import nltk
+from nltk.data import load
 nltk.download('averaged_perceptron_tagger')
 nltk.download("punkt")
+nltk.download('tagsets')
 from utils import read_non_emoji_tweets
 from utils import get_label
 from utils import print_class_stats
@@ -25,14 +27,34 @@ from utils import read_vocabulary, write_tokens_to_txt
 def part_of_speech(data):
     '''
     Part of speech main function
-    # TODO: TweeboParser has fewer class than nltk pos_tagger
+    TODO: TweeboParser has fewer class than nltk pos_tagger
+    NOTE: I checked and TweeboParser requires running a server in the background
+    are we sure we wan't this?
+
+    # Parameters
+    data : (Tweet : namedTuple) list
+
+    # Return
+    dict : 
+        tweet_id : int -> {
+            'tweet_tag_cnt' -> nparray : [45 x 1 vector in which each index represent the count of each tag in tagset],
+            'tweet_tag_ratio' -> nparray : [45 x 1 vector in which each index represent the ratio of each tag in tagset],
+            'tweet_lexical_density' -> float : tweet lexical density
+        }
+    
     '''
+
+    # create a tagset dictionary of tag : str -> index : int so we can create np array
+    # each tag is mapped to an index of our 45 x 1 dimension vector
+    tagset = load('help/tagsets/upenn_tagset.pickle').keys()
+    tagset_tag_to_index = dict(zip(tagset, [i for i in range(len(tagset))]))
+
     feature_dict = {}
     try:
         for tweet in data:
 
             # tokenize and tag tweet
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized = tweet.tweet_words()
             tagged = nltk.pos_tag(tokenized)
 
             # count the absolute number of each tag
@@ -40,22 +62,32 @@ def part_of_speech(data):
             for _, tag in tagged:
                 tweet_tag_counter[tag] += 1
 
-            # compute/convert the absolute count of each tag
+            # build np array for tweet tag counts
             tweet_tag_cnt = list(tweet_tag_counter.items())
+            tweet_tag_cnt_vec = np.zeros((45,))
+            for tag, cnt in tweet_tag_cnt:
+                if tag in tagset:
+                    tweet_tag_cnt_vec[tagset_tag_to_index[tag]] = cnt
 
-            # compute the ratio of each tag
+
+            # build np array for tweet tag ratio
             tweet_tag_ratio = [(tag, tweet_tag_counter[tag] / len(tweet_tag_counter)) for tag in tweet_tag_counter]
+            tweet_tag_ratio_vec = np.zeros((45,))
+            for tag, ratio  in tweet_tag_ratio:
+                if tag in tagset:
+                    tweet_tag_ratio_vec[tagset_tag_to_index[tag]] = ratio
 
             # compute lexical density: the number of unique tokens divided by the total number of words.
             tweet_lexical_density = len(set(tokenized))/len(tokenized)
 
             feature_dict[tweet.tweet_id] = {
-                'tweet_tag_cnt' : tweet_tag_cnt,
-                'tweet_tag_ratio' : tweet_tag_ratio,
+                'tweet_tag_cnt' : tweet_tag_cnt_vec,
+                'tweet_tag_ratio' : tweet_tag_ratio_vec,
                 'tweet_lexical_density' : tweet_lexical_density
             }
 
         # print(feature_dict)
+
 
     except Exception as e:
         print(str(e))
@@ -83,6 +115,16 @@ def syllable_count(word):
 def pronunciations(data):
     '''
     Pronunciation main function
+
+    # Parameters
+    data : (Tweet : namedTuple) list
+
+    # Return
+    dict : 
+        tweet_id : int -> {
+            'tweet_no_vowel_cnt' -> int : number of tokens with no vowels,
+            'tweet_three_more_syllables_cnt' -> int : number of tokens with more than 3 syllables
+        }
     '''
     feature_dict = {}
     try:
@@ -95,7 +137,7 @@ def pronunciations(data):
             tweet_three_more_syllables_cnt = 0
 
             # tokenize and tag tweet
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized = tweet.tweet_words()
 
             for token in tokenized:
                 if token.isalpha() and not any(letter in 'aeiou' for letter in token):
@@ -118,6 +160,17 @@ def pronunciations(data):
 def capitalization(data):
     '''
     Capitalization main function
+
+    # Parameters
+    data : (Tweet : namedTuple) list
+
+    # Return
+    dict : 
+        tweet_id : int -> {
+            'tweet_initial_cap_cnt' -> int : number of tokens with initial capitalization,
+            'tweet_all_cap_cnt' -> int : number of tokens that are all cap,
+            'tweet_tag_cap_cnt' -> int : number of tokens with tags that begin with capital letter
+        }
     '''
     feature_dict = {}
     try:
@@ -133,7 +186,7 @@ def capitalization(data):
             tweet_tag_cap_cnt = 0
 
             # tokenize tweet
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized = tweet.tweet_words()
 
             for token in tokenized:
                 if token.istitle():
@@ -151,6 +204,7 @@ def capitalization(data):
                 'tweet_all_cap_cnt' : tweet_all_cap_cnt,
                 'tweet_tag_cap_cnt' : tweet_tag_cap_cnt
             }
+        # print(feature_dict)
 
     except Exception as e:
         print(str(e))
@@ -369,8 +423,8 @@ if __name__ == '__main__':
     # unigram_feature, bigram_feature = extract_ngrams(train_A)
     # print(unigram_feature[2][:20], bigram_feature[2][:20])
 
-    unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
-    print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
+    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
+    # print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
 
     # unit test for part of speech
     # part_of_speech(train_A)
