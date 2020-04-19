@@ -20,7 +20,8 @@ from utils import get_label
 from utils import print_class_stats
 from utils import read_vocabulary, write_tokens_to_txt
 
-# TODO: tokenize takes time, and we are now doing it for every feature that need tokenization, optimize it later
+# Define constant here
+MIN_FREQ = 3
 
 ### Part of Speech Implementation
 
@@ -212,10 +213,9 @@ def capitalization(data):
 
 ### Unigram and Bigram features
 
-def construct_vocabulary(corpus, min_freq=3):
+def construct_vocabulary(corpus, min_freq=MIN_FREQ):
     """
     construct vocabulary file first before extract ngrams
-    TODO: discuss about min_freq
     """
     unigram_freq = Counter([])
     bigram_freq = Counter([])
@@ -250,7 +250,7 @@ def extract_ngrams(corpus):
     """
     input: whole corpus
     output: 2 dicts for unigram and bigram features as arrays
-    TODO: OOV words later
+    Done: Out of Vocabulary (OOV) words
     """
     if not os.path.exists('baseline/unigram_vocab.txt') or not os.path.exists('baseline/bigram_vocab.txt'):
         construct_vocabulary(corpus)
@@ -265,12 +265,15 @@ def extract_ngrams(corpus):
         tokens = data.tweet_words()
         lower_tokens = [t.lower() for t in tokens]
         _id = data.tweet_id
-        unigram_dict[_id] = np.zeros(len(unigram_vocab))
-        bigram_dict[_id] = np.zeros(len(bigram_vocab))
+        unigram_dict[_id] = np.zeros(len(unigram_vocab) + 1)
+        bigram_dict[_id] = np.zeros(len(bigram_vocab) + 1)
         for idx, ele in enumerate(lower_tokens):
             # unigram
             if ele in unigram_vocab:
                 unigram_dict[_id][unigram_vocab[ele]] = 1.
+            else:
+                # OOV words append to last element in the array
+                unigram_dict[_id][len(unigram_vocab)] = 1.
 
             if idx == len(lower_tokens) - 1:
                 continue
@@ -278,11 +281,13 @@ def extract_ngrams(corpus):
             # bigram
             if (ele, lower_tokens[idx+1]) in bigram_vocab:
                 bigram_dict[_id][bigram_vocab[(ele, lower_tokens[idx+1])]] = 1.
+            else:
+                bigram_dict[_id][len(bigram_vocab)] = 1.
 
     return unigram_dict, bigram_dict
 
 
-def brown_cluster_ngrams(corpus, num_cluster=1000):
+def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
     # TODO: may need to adjust the num_cluster since we have smaller dataset/vocabulary size
     # TODO: check for spacy implementation later
     cluster_fn = 'baseline/brown_cluster_{}.txt'.format(num_cluster)
@@ -296,8 +301,10 @@ def brown_cluster_ngrams(corpus, num_cluster=1000):
     int2idx = {}
     with open(cluster_fn, 'r') as inf:
         for line in inf:
-            # TODO: set min freq?
+            # set min freq
             cluster_bit, word, freq = line.strip().split('\t')
+            if freq < min_freq:
+                continue
             cluster_int = int(cluster_bit, 2)
             if cluster_int not in int2idx:
                 int2idx[cluster_int] = idx
@@ -310,13 +317,16 @@ def brown_cluster_ngrams(corpus, num_cluster=1000):
         tokens = data.tweet_words()
         lower_tokens = [t.lower() for t in tokens]
         _id = data.tweet_id
-        unigram_dict[_id] = np.zeros(len(cluster_vocab))
-        bigram_dict[_id] = np.zeros(len(cluster_vocab))
+        unigram_dict[_id] = np.zeros(len(cluster_vocab) + 1)
+        bigram_dict[_id] = np.zeros(len(cluster_vocab) + 1)
         for idx, ele in enumerate(lower_tokens):
             # unigram
             if ele in cluster_vocab:
                 unigram_dict[_id][cluster_vocab[ele]] = 1.
                 bigram_dict[_id][cluster_vocab[ele]] = 1.
+            else:
+                unigram_dict[_id][len(cluster_vocab)] = 1.
+                bigram_dict[_id][len(cluster_vocab)] = 1.
 
             if idx == len(lower_tokens) - 1:
                 continue
@@ -324,9 +334,17 @@ def brown_cluster_ngrams(corpus, num_cluster=1000):
             # bigram
             if lower_tokens[idx + 1] in cluster_vocab:
                 bigram_dict[_id][cluster_vocab[lower_tokens[idx + 1]]] = 1.
+            else:
+                bigram_dict[_id][len(cluster_vocab)] = 1.
 
     return unigram_dict, bigram_dict
 
+
+def dependency():
+    depend_fn = 'baseline/dependency_A.txt.predict'
+    if not os.path.exists(depend_fn):
+        print('brown cluster file not exist, run the repo first')
+        sys.exit(1)
 
 
 #sentiment features
@@ -334,13 +352,15 @@ def brown_cluster_ngrams(corpus, num_cluster=1000):
 
 def tweet_whole_sentiment(data):
     '''
-    sentiment feature
+    input: whole corpus
+    output: 1 dicts for tweet_whole_sentiment, 
+            keys: tweet_id, values: sentimentValues (1--Positive,2--Neutral,3--Negative
     '''
     try:
         nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
         feature_dict={}
         for tweet in data:
-            tokenized=nltk.word_tokenize(tweet.tweet_text)
+            tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
             text=" ".join(new_words)
             annotate=nlp_wrapper.annotate(text,properties={
@@ -355,6 +375,14 @@ def tweet_whole_sentiment(data):
     
     
 def tweet_word_sentiment(data):
+    '''
+    input: whole corpus
+    output: 1 dicts for tweet_word_sentiment, 
+            keys: tweet_id, values: dict (keys={"max","min","distance"})
+                                    max--highest sentiment score among all words
+                                    min--lowest sentiment score among all words
+                                    distance-- difference between highest score and lowest score
+    '''
     feature_dict={}
     try:
         senti = PySentiStr()
@@ -362,7 +390,7 @@ def tweet_word_sentiment(data):
         senti.setSentiStrengthLanguageFolderPath('./SentiStrengthData/')
 
         for tweet in data:
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
             result = senti.getSentiment(new_words)
             max_,min_=result[0],result[0]
@@ -376,11 +404,18 @@ def tweet_word_sentiment(data):
     
     
 def intensifier(data):
+    '''
+    input: whole corpus
+    output: 1 dict for intensifier feature, 
+            keys: tweet_id, values: 1,0 for containing an intensifier or not
+    '''
+    
+    
     file=open("intensifier.txt")
     intense=set([x.rstrip("\n") for x in file.readlines()])
     feature_dict={}
     for tweet in data:
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized= tweet.tweet_words()
             for word in tokenized:
                 if word in intense:
                     feature_dict[tweet.tweet_id]=1
@@ -389,10 +424,6 @@ def intensifier(data):
                 feature_dict[tweet.tweet_id]=0      
     return feature_dict
 
-
-
-def dependency():
-    pass
 
 if __name__ == '__main__':
     # File paths from project level
