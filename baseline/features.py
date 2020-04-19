@@ -298,13 +298,15 @@ def dependency():
 
 def tweet_whole_sentiment(data):
     '''
-    sentiment feature
+    input: whole corpus
+    output: 1 dicts for tweet_whole_sentiment, 
+            keys: tweet_id, values: sentimentValues (1--Positive,2--Neutral,3--Negative
     '''
     try:
         nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
         feature_dict={}
         for tweet in data:
-            tokenized=nltk.word_tokenize(tweet.tweet_text)
+            tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
             text=" ".join(new_words)
             annotate=nlp_wrapper.annotate(text,properties={
@@ -319,6 +321,14 @@ def tweet_whole_sentiment(data):
     
     
 def tweet_word_sentiment(data):
+    '''
+    input: whole corpus
+    output: 1 dicts for tweet_word_sentiment, 
+            keys: tweet_id, values: dict (keys={"max","min","distance"})
+                                    max--highest sentiment score among all words
+                                    min--lowest sentiment score among all words
+                                    distance-- difference between highest score and lowest score
+    '''
     feature_dict={}
     try:
         senti = PySentiStr()
@@ -326,7 +336,7 @@ def tweet_word_sentiment(data):
         senti.setSentiStrengthLanguageFolderPath('./SentiStrengthData/')
 
         for tweet in data:
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
             result = senti.getSentiment(new_words)
             max_,min_=result[0],result[0]
@@ -340,11 +350,18 @@ def tweet_word_sentiment(data):
     
     
 def intensifier(data):
+    '''
+    input: whole corpus
+    output: 1 dict for intensifier feature, 
+            keys: tweet_id, values: 1,0 for containing an intensifier or not
+    '''
+    
+    
     file=open("intensifier.txt")
     intense=set([x.rstrip("\n") for x in file.readlines()])
     feature_dict={}
     for tweet in data:
-            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            tokenized= tweet.tweet_words()
             for word in tokenized:
                 if word in intense:
                     feature_dict[tweet.tweet_id]=1
