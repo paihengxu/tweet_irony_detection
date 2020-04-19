@@ -1,4 +1,6 @@
 import re
+import json
+import gzip
 
 from typing import Dict, List, NamedTuple
 from collections import Counter
@@ -126,3 +128,24 @@ def write_tokens_to_txt(corpus, fn):
             tokens = data.tweet_words()
             lower_tokens = [t.lower() for t in tokens]
             outf.write("{}\n".format(' '.join(lower_tokens)))
+
+def write_dict_to_json(dic, fn):
+    """
+    input: dic -> a dictionary to be dumped, fn -> filename
+    # TODO: if the file is too large, we could store it to a compressed gz file
+    """
+    with open(fn, 'w') as outf:
+        outf.write("{}".format(json.dumps(dic)))
+
+
+def read_dict_from_json(fn):
+    """
+    input: fn -> filename
+    output: a dict
+    """
+    data = {}
+    with open(fn, 'r') as inf:
+        for line in inf:
+            data.update(json.loads(line.strip()))
+
+    return data
