@@ -6,9 +6,13 @@ import json
 import numpy as np
 from nltk.util import ngrams
 from collections import Counter
+from pycorenlp import StanfordCoreNLP
+from sentistrength import PySentiStr
+
+
 import nltk
 nltk.download('averaged_perceptron_tagger')
-
+nltk.download("punkt")
 from utils import read_non_emoji_tweets
 from utils import get_label
 from utils import print_class_stats
@@ -268,6 +272,69 @@ def brown_cluster_ngrams(corpus, num_cluster=1000):
                 bigram_dict[_id][cluster_vocab[lower_tokens[idx + 1]]] = 1.
 
     return unigram_dict, bigram_dict
+
+
+
+#sentiment features
+
+
+def tweet_whole_sentiment(data):
+    '''
+    sentiment feature
+    '''
+    try:
+        nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
+        feature_dict={}
+        for tweet in data:
+            tokenized=nltk.word_tokenize(tweet.tweet_text)
+            new_words= [word for word in tokenized if word.isalnum()]
+            text=" ".join(new_words)
+            annotate=nlp_wrapper.annotate(text,properties={
+                'annotators': 'sentiment',
+                'outputFormat': 'json',
+                'timeout': 1000,})
+            for sentence in annotate["sentences"]:
+                feature_dict[tweet.tweet_id]=sentence["sentimentValue"]
+        return feature_dict
+    except Exception as e:
+        print(str(e))
+    
+    
+def tweet_word_sentiment(data):
+    feature_dict={}
+    try:
+        senti = PySentiStr()
+        senti.setSentiStrengthPath('./SentiStrength.jar')
+        senti.setSentiStrengthLanguageFolderPath('./SentiStrengthData/')
+
+        for tweet in data:
+            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            new_words= [word for word in tokenized if word.isalnum()]
+            result = senti.getSentiment(new_words)
+            max_,min_=result[0],result[0]
+            for score in result:
+                max_=max(max_,score)
+                min_=min(min_,score)
+            feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
+        return feature_dict
+    except Exception as e:
+        print(str(e))
+    
+    
+def intensifier(data):
+    file=open("intensifier.txt")
+    intense=set([x.rstrip("\n") for x in file.readlines()])
+    feature_dict={}
+    for tweet in data:
+            tokenized = nltk.word_tokenize(tweet.tweet_text)
+            for word in tokenized:
+                if word in intense:
+                    feature_dict[tweet.tweet_id]=1
+                    break
+            if not tweet.tweet_id in feature_dict:
+                feature_dict[tweet.tweet_id]=0      
+    return feature_dict
+
 
 
 def dependency():
