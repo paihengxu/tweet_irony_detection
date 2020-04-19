@@ -30,14 +30,14 @@ def pre_process_tweet_url(text):
     :param text: takes raw tweet_text
     :return: processed_text:
     '''
-    processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text);
+    processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text)
     # print(f'pre-process: {text}')
     # print(f'post-process:{processed_text} \n')
     return processed_text
 
 
 def pre_process_usrname(text):
-    processed_text = re.sub(r"@\w+", "*USR*", text);
+    processed_text = re.sub(r"@\w+", "*USR*", text)
     # print(f'{count}:pre-process: {text}')
     # print(f'{count}:post-process:{processed_text} \n')
     return processed_text
@@ -97,7 +97,24 @@ def print_class_stats(train_A,train_B,labels_A,labels_B):
     print('For Task A testing ',Counter(labels_test_A))
     print('For Task B testing ',Counter(labels_test_B))
 
+
 def do_stemming(text):
     words=tknzr.tokenize(text)
     stemmed=[stemmer.stem(word) for word in words]
     return stemmed
+
+def read_vocabulary(fn):
+    """
+    Read file to a dict with value as index
+    """
+    result = {}
+    idx = 0
+    with open(fn, 'r') as inf:
+        for line in inf:
+            k = line.strip().split('\t')
+            if len(k) == 2:
+                result[(k[0], k[1])] = idx
+            else:
+                result[k[0]] = idx
+            idx += 1
+    return result

@@ -1,16 +1,20 @@
 import pickle
 import re
-
 import os
 import sys
+import json
+import numpy as np
+from nltk.util import ngrams
+from collections import Counter
+import nltk
+nltk.download('averaged_perceptron_tagger')
 
 from utils import read_non_emoji_tweets
 from utils import get_label
 from utils import print_class_stats
+from utils import read_vocabulary
 
-from collections import Counter
-import nltk
-nltk.download('averaged_perceptron_tagger')
+# TODO: tokenize takes time, and we are now doing it for every feature that need tokenization, optimize it later
 
 ### Part of Speech Implementation
 
@@ -39,15 +43,15 @@ def part_of_speech(data):
 
             # compute lexical density: the number of unique tokens divided by the total number of words.
             tweet_lexical_density = len(set(tokenized))/len(tokenized)
-    
+
             feature_dict[tweet.tweet_id] = {
                 'tweet_tag_cnt' : tweet_tag_cnt,
                 'tweet_tag_ratio' : tweet_tag_ratio,
                 'tweet_lexical_density' : tweet_lexical_density
             }
-    
+
         # print(feature_dict)
-            
+
     except Exception as e:
         print(str(e))
 
@@ -79,7 +83,7 @@ def pronunciations(data):
     try:
         for tweet in data:
 
-            # number of words with only alphabetic characters but no vowels 
+            # number of words with only alphabetic characters but no vowels
             tweet_no_vowel_cnt = 0
 
             #number of words with more than three syllables
@@ -87,7 +91,7 @@ def pronunciations(data):
 
             # tokenize and tag tweet
             tokenized = nltk.word_tokenize(tweet.tweet_text)
-            
+
             for token in tokenized:
                 if token.isalpha() and not any(letter in 'aeiou' for letter in token):
                     tweet_no_vowel_cnt += 1
@@ -98,9 +102,9 @@ def pronunciations(data):
                 'tweet_no_vowel_cnt' : tweet_no_vowel_cnt,
                 'tweet_three_more_syllables_cnt' : tweet_three_more_syllables_cnt
             }
-    
+
         # print(feature_dict)
-            
+
     except Exception as e:
         print(str(e))
 
@@ -125,7 +129,7 @@ def capitalization(data):
 
             # tokenize tweet
             tokenized = nltk.word_tokenize(tweet.tweet_text)
-            
+
             for token in tokenized:
                 if token.istitle():
                     tweet_initial_cap_cnt += 1
@@ -142,12 +146,80 @@ def capitalization(data):
                 'tweet_all_cap_cnt' : tweet_all_cap_cnt,
                 'tweet_tag_cap_cnt' : tweet_tag_cap_cnt
             }
-            
+
     except Exception as e:
         print(str(e))
 
-def extract_ngrams():
-    pass
+
+### Unigram and Bigram features
+
+def construct_vocabulary(corpus, min_freq=3):
+    """
+    construct vocabulary file first before extract ngrams
+    TODO: discuss about min_freq
+    """
+    unigram_freq = Counter([])
+    bigram_freq = Counter([])
+    for tweet in corpus:
+        tokens = tweet.tweet_words()
+        lower_tokens = [t.lower() for t in tokens]
+        bigram = ngrams(lower_tokens, 2)
+
+        unigram_freq += Counter(lower_tokens)
+        bigram_freq += Counter(bigram)
+
+    # write to txt file
+    def write_counter_to_file(freq, out_fn, min_freq=min_freq):
+        with open(out_fn, 'w') as outf:
+            for ele, count in freq.items():
+                if count >= min_freq:
+                    if type(ele) == str:
+                        # write unigram
+                        outf.write('{}\n'.format(ele))
+                    else:
+                        # write bigram
+                        outf.write('{}\n'.format('\t'.join(ele)))
+
+    write_counter_to_file(unigram_freq, 'baseline/unigram_vocab.txt')
+    write_counter_to_file(bigram_freq, 'baseline/bigram_vocab.txt')
+
+    return unigram_freq, bigram_freq
+
+
+def extract_ngrams(corpus):
+    """
+    input: whole corpus
+    output: 2 dicts for unigram and bigram features as arrays
+    """
+    if not os.path.exists('baseline/unigram_vocab.txt') or not os.path.exists('baseline/bigram_vocab.txt'):
+        construct_vocabulary(corpus)
+
+    # key: word, value: index
+    unigram_vocab = read_vocabulary('baseline/unigram_vocab.txt')
+    bigram_vocab = read_vocabulary('baseline/bigram_vocab.txt')
+
+    unigram_dict = {}
+    bigram_dict = {}
+    for data in corpus:
+        tokens = data.tweet_words()
+        lower_tokens = [t.lower() for t in tokens]
+        _id = data.tweet_id
+        unigram_dict[_id] = np.zeros(len(unigram_vocab))
+        bigram_dict[_id] = np.zeros(len(bigram_vocab))
+        for idx, ele in enumerate(lower_tokens):
+            # unigram
+            if ele in unigram_vocab:
+                unigram_dict[_id][unigram_vocab[ele]] = 1.
+
+            if idx == len(lower_tokens) - 1:
+                continue
+
+            # bigram
+            if (ele, lower_tokens[idx+1]) in bigram_vocab:
+                bigram_dict[_id][bigram_vocab[(ele, lower_tokens[idx+1])]] = 1.
+
+    return unigram_dict, bigram_dict
+
 
 def brown_cluster_ngrams():
     pass
@@ -180,7 +252,9 @@ if __name__ == '__main__':
 
 
     # unit test for features
-    # extract_ngrams()
+    # TODO: differentiate vocab for A,B and emoji task
+    unigram_feature, bigram_feature = extract_ngrams(train_A)
+    print(unigram_feature[2][:20], bigram_feature[2][:20])
 
     # unit test for part of speech
     # part_of_speech(train_A)
