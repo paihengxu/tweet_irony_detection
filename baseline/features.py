@@ -12,7 +12,7 @@ nltk.download('averaged_perceptron_tagger')
 from utils import read_non_emoji_tweets
 from utils import get_label
 from utils import print_class_stats
-from utils import read_vocabulary
+from utils import read_vocabulary, write_tokens_to_txt
 
 # TODO: tokenize takes time, and we are now doing it for every feature that need tokenization, optimize it later
 
@@ -21,6 +21,7 @@ from utils import read_vocabulary
 def part_of_speech(data):
     '''
     Part of speech main function
+    # TODO: TweeboParser has fewer class than nltk pos_tagger
     '''
     feature_dict = {}
     try:
@@ -191,6 +192,7 @@ def extract_ngrams(corpus):
     """
     input: whole corpus
     output: 2 dicts for unigram and bigram features as arrays
+    TODO: OOV words later
     """
     if not os.path.exists('baseline/unigram_vocab.txt') or not os.path.exists('baseline/bigram_vocab.txt'):
         construct_vocabulary(corpus)
@@ -222,8 +224,51 @@ def extract_ngrams(corpus):
     return unigram_dict, bigram_dict
 
 
-def brown_cluster_ngrams():
-    pass
+def brown_cluster_ngrams(corpus, num_cluster=1000):
+    # TODO: may need to adjust the num_cluster since we have smaller dataset/vocabulary size
+    # TODO: check for spacy implementation later
+    cluster_fn = 'baseline/brown_cluster_{}.txt'.format(num_cluster)
+    if not os.path.exists(cluster_fn):
+        print('brown cluster file not exist, run the repo first')
+        write_tokens_to_txt(corpus, 'baseline/corpus_A.txt')
+        sys.exit(1)
+
+    cluster_vocab = {}
+    idx = 0
+    int2idx = {}
+    with open(cluster_fn, 'r') as inf:
+        for line in inf:
+            # TODO: set min freq?
+            cluster_bit, word, freq = line.strip().split('\t')
+            cluster_int = int(cluster_bit, 2)
+            if cluster_int not in int2idx:
+                int2idx[cluster_int] = idx
+                idx += 1
+            cluster_vocab[word] = int2idx[cluster_int]
+
+    unigram_dict = {}
+    bigram_dict = {}
+    for data in corpus:
+        tokens = data.tweet_words()
+        lower_tokens = [t.lower() for t in tokens]
+        _id = data.tweet_id
+        unigram_dict[_id] = np.zeros(len(cluster_vocab))
+        bigram_dict[_id] = np.zeros(len(cluster_vocab))
+        for idx, ele in enumerate(lower_tokens):
+            # unigram
+            if ele in cluster_vocab:
+                unigram_dict[_id][cluster_vocab[ele]] = 1.
+                bigram_dict[_id][cluster_vocab[ele]] = 1.
+
+            if idx == len(lower_tokens) - 1:
+                continue
+
+            # bigram
+            if lower_tokens[idx + 1] in cluster_vocab:
+                bigram_dict[_id][cluster_vocab[lower_tokens[idx + 1]]] = 1.
+
+    return unigram_dict, bigram_dict
+
 
 def dependency():
     pass
@@ -254,8 +299,11 @@ if __name__ == '__main__':
 
     # unit test for features
     # TODO: differentiate vocab for A,B and emoji task
-    unigram_feature, bigram_feature = extract_ngrams(train_A)
-    print(unigram_feature[2][:20], bigram_feature[2][:20])
+    # unigram_feature, bigram_feature = extract_ngrams(train_A)
+    # print(unigram_feature[2][:20], bigram_feature[2][:20])
+
+    unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
+    print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
 
     # unit test for part of speech
     # part_of_speech(train_A)

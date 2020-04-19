@@ -37,6 +37,7 @@ def pre_process_tweet_url(text):
 
 
 def pre_process_usrname(text):
+    #TODO: *USR* would be tokenized into three tokens
     processed_text = re.sub(r"@\w+", "*USR*", text)
     # print(f'{count}:pre-process: {text}')
     # print(f'{count}:post-process:{processed_text} \n')
@@ -118,3 +119,10 @@ def read_vocabulary(fn):
                 result[k[0]] = idx
             idx += 1
     return result
+
+def write_tokens_to_txt(corpus, fn):
+    with open(fn, 'w') as outf:
+        for data in corpus:
+            tokens = data.tweet_words()
+            lower_tokens = [t.lower() for t in tokens]
+            outf.write("{}\n".format(' '.join(lower_tokens)))
