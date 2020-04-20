@@ -10,7 +10,6 @@ from collections import Counter
 from pycorenlp import StanfordCoreNLP
 from sentistrength import PySentiStr
 
-
 import nltk
 from nltk.data import load
 nltk.download('averaged_perceptron_tagger')
@@ -29,9 +28,10 @@ MIN_FREQ = 3
 def part_of_speech(data):
     '''
     Part of speech main function
-    TODO: TweeboParser has fewer class than nltk pos_tagger
+    TODO: CMUTweetTagger from ARK-tweet-nlp has fewer class than nltk pos_tagger
     NOTE: I checked and TweeboParser requires running a server in the background
     are we sure we wan't this?
+    Paiheng: I think it's the one mentioned in the paper. But let's skip it for now.
 
     # Parameters
     data : (Tweet : namedTuple) list
@@ -252,8 +252,8 @@ def construct_vocabulary(corpus, min_freq=MIN_FREQ):
 
 def extract_ngrams(corpus):
     """
-    input: whole corpus
-    output: 2 dicts for unigram and bigram features as arrays
+    input: whole dataset
+    output: two dictionaries, key: tweet_id, value: 1-dimensional binary numpy array
     Done: Out of Vocabulary (OOV) words
     """
     if not os.path.exists('baseline/unigram_vocab.txt') or not os.path.exists('baseline/bigram_vocab.txt'):
@@ -273,47 +273,60 @@ def extract_ngrams(corpus):
         bigram_dict[_id] = np.zeros(len(bigram_vocab) + 1)
         for idx, ele in enumerate(lower_tokens):
             # unigram
-            if ele in unigram_vocab:
-                unigram_dict[_id][unigram_vocab[ele]] = 1.
-            else:
-                # OOV words append to last element in the array
-                unigram_dict[_id][len(unigram_vocab)] = 1.
+            unigram_dict[_id][unigram_vocab.get(ele, len(unigram_vocab))] = 1.
+            # if ele in unigram_vocab:
+            #     unigram_dict[_id][unigram_vocab[ele]] = 1.
+            # else:
+            #     # OOV words append to last element in the array
+            #     unigram_dict[_id][len(unigram_vocab)] = 1.
 
             if idx == len(lower_tokens) - 1:
                 continue
 
             # bigram
-            if (ele, lower_tokens[idx+1]) in bigram_vocab:
-                bigram_dict[_id][bigram_vocab[(ele, lower_tokens[idx+1])]] = 1.
-            else:
-                bigram_dict[_id][len(bigram_vocab)] = 1.
+            bigram_dict[_id][bigram_vocab.get(ele, len(bigram_vocab))] = 1.
+            # if (ele, lower_tokens[idx+1]) in bigram_vocab:
+            #     bigram_dict[_id][bigram_vocab[(ele, lower_tokens[idx+1])]] = 1.
+            # else:
+            #     bigram_dict[_id][len(bigram_vocab)] = 1.
 
     return unigram_dict, bigram_dict
 
 
-def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
-    # TODO: may need to adjust the num_cluster since we have smaller dataset/vocabulary size
-    # TODO: check for spacy implementation later
-    cluster_fn = 'baseline/brown_cluster_{}.txt'.format(num_cluster)
-    if not os.path.exists(cluster_fn):
-        print('******brown cluster file not exist, run the repo first')
-        write_tokens_to_txt(corpus, 'baseline/corpus_A.txt')
-        sys.exit(1)
+### brown cluster features
 
+def read_brown_cluster(fn, min_freq):
     cluster_vocab = {}
     idx = 0
     int2idx = {}
-    with codecs.open(cluster_fn, 'r',encoding='utf8') as inf:
+    with codecs.open(fn, 'r',encoding='utf8') as inf:
         for line in inf:
             # set min freq
             cluster_bit, word, freq = line.strip().split('\t')
-            if freq < min_freq:
+            if int(freq) < min_freq:
                 continue
             cluster_int = int(cluster_bit, 2)
             if cluster_int not in int2idx:
                 int2idx[cluster_int] = idx
                 idx += 1
             cluster_vocab[word] = int2idx[cluster_int]
+    return cluster_vocab
+
+
+def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
+    """
+    input: whole dataset
+    output: 2 dictionaries, key: tweet_id, value: 1-dimensional binary numpy array
+    """
+    # TODO: may need to adjust the num_cluster since we have smaller dataset/vocabulary size
+    # TODO: check for spacy implementation later
+    cluster_fn = 'baseline/brown_cluster_{}.txt'.format(num_cluster)
+    if not os.path.exists(cluster_fn):
+        print('brown cluster file not exist, run the repo first')
+        write_tokens_to_txt(corpus, 'baseline/corpus_A.txt')
+        sys.exit(1)
+
+    cluster_vocab = read_brown_cluster(cluster_fn, min_freq=min_freq)
 
     unigram_dict = {}
     bigram_dict = {}
@@ -325,34 +338,106 @@ def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
         bigram_dict[_id] = np.zeros(len(cluster_vocab) + 1)
         for idx, ele in enumerate(lower_tokens):
             # unigram
-            if ele in cluster_vocab:
-                unigram_dict[_id][cluster_vocab[ele]] = 1.
-                bigram_dict[_id][cluster_vocab[ele]] = 1.
-            else:
-                unigram_dict[_id][len(cluster_vocab)] = 1.
-                bigram_dict[_id][len(cluster_vocab)] = 1.
+            unigram_dict[_id][cluster_vocab.get(ele, len(cluster_vocab))] = 1.
+            bigram_dict[_id][cluster_vocab.get(ele, len(cluster_vocab))] = 1.
+            # if ele in cluster_vocab:
+            #     unigram_dict[_id][cluster_vocab[ele]] = 1.
+            #     bigram_dict[_id][cluster_vocab[ele]] = 1.
+            # else:
+            #     unigram_dict[_id][len(cluster_vocab)] = 1.
+            #     bigram_dict[_id][len(cluster_vocab)] = 1.
 
             if idx == len(lower_tokens) - 1:
                 continue
 
             # bigram
-            if lower_tokens[idx + 1] in cluster_vocab:
-                bigram_dict[_id][cluster_vocab[lower_tokens[idx + 1]]] = 1.
-            else:
-                bigram_dict[_id][len(cluster_vocab)] = 1.
+            bigram_dict[_id][cluster_vocab.get(lower_tokens[idx + 1], len(cluster_vocab))] = 1.
+            # if lower_tokens[idx + 1] in cluster_vocab:
+            #     bigram_dict[_id][cluster_vocab[lower_tokens[idx + 1]]] = 1.
+            # else:
+            #     bigram_dict[_id][len(cluster_vocab)] = 1.
 
     return unigram_dict, bigram_dict
 
 
-def dependency():
+def dependency(corpus, num_cluster=1000, min_freq=MIN_FREQ):
+    """
+    input: whole dataset
+    output: two dictionaries, key: tweet_id, value: 1-dimensional binary numpy array
+    """
+    sorted_corpus = sorted(corpus, key=lambda tweet: tweet.tweet_id)
+
     depend_fn = 'baseline/dependency_A.txt.predict'
     if not os.path.exists(depend_fn):
+        print('dependency parser file not exist, run the repo first')
+        sys.exit(1)
+
+    # reading vocab
+    cluster_fn = 'baseline/brown_cluster_{}.txt'.format(num_cluster)
+    if not os.path.exists(cluster_fn):
         print('brown cluster file not exist, run the repo first')
         sys.exit(1)
 
+    if not os.path.exists('baseline/unigram_vocab.txt'):
+        construct_vocabulary(corpus)
+
+    cluster_vocab = read_brown_cluster(cluster_fn, min_freq)
+    unigram_vocab = read_vocabulary('baseline/unigram_vocab.txt')
+
+    # dict to store the features
+    word_dict = {}
+    cluster_dict = {}
+
+    # NOTE: this requires tweets are sorted from 1 to n when passing to the txt file
+    idx = 1
+    with open(depend_fn, 'r') as inf:
+        word_tmp = np.zeros((len(unigram_vocab) + 1, len(unigram_vocab) + 1))
+        cluster_tmp = np.zeros((len(cluster_vocab) + 1, len(cluster_vocab) + 1))
+        valid_arc = {}
+        tweet_word_dict = {}
+        tweet_tokens = []
+        for line in inf:
+            if line.strip():
+                word_idx, word, _,  tag, tag, _, arc_idx, _ = line.split('\t')
+                tweet_word_dict[word_idx] = word
+                tweet_tokens.append(word)
+                try:
+                    int_arc_idx = int(arc_idx)
+                except TypeError as err:
+                    int_arc_idx = -1
+                if int_arc_idx > 0:
+                    valid_arc[word_idx] = arc_idx
+            else:
+                # tweets are separated by a empty line
+                lower_tweet_words = [t.lower() for t in sorted_corpus[idx-1].tweet_words()]
+                assert tweet_tokens == lower_tweet_words, \
+                    ' '.join(tweet_tokens) + '\n' + ' '.join(lower_tweet_words)
+                # when encounter a empty line, summary and store last chunks, init. for next chunk
+                # summary
+                for k, v in valid_arc.items():
+                    dim1_word, dim2_word = tweet_word_dict[k], tweet_word_dict[v]
+                    word_tmp[unigram_vocab.get(dim1_word, len(unigram_vocab)), unigram_vocab.get(dim2_word, len(unigram_vocab))] = 1.
+                    cluster_tmp[cluster_vocab.get(dim1_word, len(cluster_vocab)), cluster_vocab.get(dim2_word, len(cluster_vocab))] = 1.
+
+                # flatten
+                word_dict[idx] = word_tmp.flatten()
+                cluster_dict[idx] = cluster_tmp.flatten()
+
+                # init for next chunk
+                # plus 1 for OOV
+                valid_arc = {}
+                tweet_word_dict = {}
+                tweet_tokens = []
+                word_tmp = np.zeros((len(unigram_vocab) + 1, len(unigram_vocab) + 1))
+                cluster_tmp = np.zeros((len(cluster_vocab) + 1, len(cluster_vocab) + 1))
+                idx += 1
+                if idx % int(len(corpus)*0.1) == 0:
+                    print(idx / int(len(corpus)*0.1))
+
+    return word_dict, cluster_dict
+
 
 #sentiment features
-
 
 def tweet_whole_sentiment(data):
     '''
@@ -398,16 +483,16 @@ def tweet_word_sentiment(data):
         for tweet in data:
             tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
-            print(new_words)
             result = senti.getSentiment(new_words)
+<<<<<<< HEAD
             print("result")
+=======
+>>>>>>> ea2e77697555fa8232814dda5613efb3f8e29d36
             max_,min_=result[0],result[0]
-            print("9")
             for score in result:
                 max_=max(max_,score)
                 min_=min(min_,score)
             feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
-        print(feature_dict)
         return feature_dict
 
     except Exception as e:
@@ -529,6 +614,7 @@ def featurize():
     tst_labels_B = [v for k,v in gold_B.items()]
 
     # Print class stats
+<<<<<<< HEAD
     print_class_stats(train_A, train_B, gold_A, gold_B)
     # Generate features
     feats_tr_A = get_features(train_A)
@@ -544,7 +630,33 @@ if __name__ == '__main__':
 
 
 
+=======
+    print_class_stats(train_A,train_B,labels_A,labels_B)
+
+    # write_tokens_to_txt(train_A, fn='baseline/corpus_A.txt')
+    # Generate features
+    # feats_tr_A=get_features(train_A)
+>>>>>>> ea2e77697555fa8232814dda5613efb3f8e29d36
 
     # unit test for features
     # TODO: differentiate vocab for A,B and emoji task
+    # unigram_feature, bigram_feature = extract_ngrams(train_A)
+    # print(unigram_feature[2][:20], bigram_feature[2][:20])
 
+    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
+    # print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
+
+    word_arc_feature, cluster_arc_feature = dependency(train_A)
+    print(len(word_arc_feature[2]), word_arc_feature[2][:20])
+    print(len(cluster_arc_feature[2]), cluster_arc_feature[2][:20])
+
+    # tweet_word_sentiment(train_A)
+
+    # unit test for part of speech
+    # part_of_speech(train_A)
+
+    # unit test for prounciation
+    # pronunciations(train_A)
+
+    # unit test for capitalization
+    # capitalization(train_A)
