@@ -7,7 +7,6 @@ in
 time
 for
 christmas
-*
 url
 usr
 we
@@ -612,6 +611,7 @@ iraq
 won
 war
 sick
+*
 other
 tweets
 yeah
@@ -732,6 +732,7 @@ results
 loving
 look
 xd
+usr's
 saying
 four
 sounds
@@ -1996,7 +1997,6 @@ almost
 arguing
 senate
 falling
-political
 #taliban
 received
 face_savouring_delicious_food
@@ -2147,6 +2147,7 @@ rise
 smartphone
 app
 pays
+see-url
 sky
 #hypocrites
 yours

@@ -33,7 +33,7 @@ def pre_process_tweet_url(text):
     :param text: takes raw tweet_text
     :return: processed_text:
     '''
-    processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "*URL*", text)
+    processed_text = re.sub(r"http[s]*://[\w,\.,\/]+", "URL", text)
     # print(f'pre-process: {text}')
     # print(f'post-process:{processed_text} \n')
     return processed_text
@@ -41,7 +41,7 @@ def pre_process_tweet_url(text):
 
 def pre_process_usrname(text):
     #TODO: *USR* would be tokenized into three tokens
-    processed_text = re.sub(r"@\w+", "*USR*", text)
+    processed_text = re.sub(r"@\w+", "USR", text)
     # print(f'{count}:pre-process: {text}')
     # print(f'{count}:post-process:{processed_text} \n')
     return processed_text

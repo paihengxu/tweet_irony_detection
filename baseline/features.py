@@ -400,7 +400,7 @@ def tweet_word_sentiment(data):
             new_words= [word for word in tokenized if word.isalnum()]
             print(new_words)
             result = senti.getSentiment(new_words)
-            print("Result=",result)
+            print("result")
             max_,min_=result[0],result[0]
             print("9")
             for score in result:
@@ -438,70 +438,112 @@ def intensifier(data):
 
 
 def get_features(data):
-    # unigram_feature, bigram_feature = extract_ngrams(data)
-    # print("1. Ngrams generated")
-    # print(f'Size of unigram={len(unigram_feature)} x {len(unigram_feature[1])}')
-    # print(f'Size of bigram={len(bigram_feature)} x {len(bigram_feature[1])}')
+    unigram_feature, bigram_feature = extract_ngrams(data)
+    print("1. Ngrams generated")
+    print(f'Size of unigram={len(unigram_feature)} x {len(unigram_feature[1])}')
+    print(f'Size of bigram={len(bigram_feature)} x {len(bigram_feature[1])}')
 
 
     # unit test for part of speech
-    # pos_dict=part_of_speech(data)
-    # print("2. POS Tagging done")
-    # print(f'Len of pos ={len(pos_dict)} x 3')
+    pos_dict=part_of_speech(data)
+    print("2. POS Tagging done")
+    print(f'Len of pos ={len(pos_dict)} x 3')
     # print(len(pos_dict[1]['tweet_tag_cnt']),
     #       len(pos_dict[1]['tweet_tag_cnt']),
     #      "1")
 
 
     # unit test for prounciation
-    # pronounce_dict= pronunciations(data)
-    # print("3. Pronounciation done")
-    # print(len(pronounce_dict))
+    pronounce_dict= pronunciations(data)
+    print("3. Pronounciation done")
+    print(len(pronounce_dict))
 
 
     # unit test for capitalization
-    # caps=capitalization(data)
-    # print("4. CAPS done")
-    # print(len(caps))
+    caps=capitalization(data)
+    print("4. CAPS done")
+    print(len(caps))
 
-    # sent_senti=tweet_whole_sentiment(data)
-    # print("5.Sentence Sentiment done")
-    # print(len(sent_senti))
+    # TODO: doent return value for tweet_id 1683 - need some setting for empty strings
+    sent_senti=tweet_whole_sentiment(data)
+    print("5.Sentence Sentiment done")
+    print(len(sent_senti))
 
-    word_senti=tweet_word_sentiment(data)
+    # word_senti=tweet_word_sentiment(data)
     # print("6. Words sentiment done")
     # print(len(word_senti))
 
-    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
+    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(data)
     # print("After Brown")
     # print(f'Size of brown unigram={len(unigram_brown_feature)} x {len(unigram_brown_feature[1])}')
     # print(f'Size of brown bigram={len(bigram_brown_feature)} x {len(bigram_brown_feature[1])}')
 
+    Vectors=[]
+    for t in data:
+        vec=[]
+        vec.extend(unigram_feature.get(t.tweet_id))
+        vec.extend(bigram_feature.get(t.tweet_id))
 
-if __name__ == '__main__':
+        vec.extend(pos_dict[t.tweet_id]['tweet_tag_cnt'])
+        vec.extend(pos_dict[t.tweet_id]['tweet_tag_ratio'])
+        vec.append(pos_dict[t.tweet_id]['tweet_lexical_density'])
+
+        vec.append(pronounce_dict[t.tweet_id]['tweet_no_vowel_cnt'])
+        vec.append(pronounce_dict[t.tweet_id]['tweet_three_more_syllables_cnt'])
+
+        vec.append(caps[t.tweet_id]['tweet_initial_cap_cnt'])
+        vec.append(caps[t.tweet_id]['tweet_all_cap_cnt'])
+        vec.append(caps[t.tweet_id]['tweet_tag_cap_cnt'])
+
+        # vec.append(sent_senti[t.tweet_id])
+
+        Vectors.append(vec)
+
+    print(len(Vectors),len(Vectors[0]))
+    return Vectors
+
+
+def featurize():
     # File paths from project level
     # fp_train_A = 'tweet_irony_detection/train/SemEval2018-T3-train-taskA.txt'
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
     fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
     fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
-    fp_labels_A= 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
-    fp_labels_B='goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
+    fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
+    fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
 
     # Training data for task A and B , test data & correct labels for both tasks
-    pre_process_url=True # Set to remove URLs
-    pre_process_usr=True
-    train_A = read_non_emoji_tweets(fp_train_A,"train",pre_process_url,pre_process_usr)
-    train_B = read_non_emoji_tweets(fp_train_B,"train",pre_process_url,pre_process_usr)
+    pre_process_url = True  # Set to remove URLs
+    pre_process_usr = True
+    train_A = read_non_emoji_tweets(fp_train_A, "train", pre_process_url, pre_process_usr)
+    train_B = read_non_emoji_tweets(fp_train_B, "train", pre_process_url, pre_process_usr)
+    tr_labels_A = [t.tweet_label for t in train_A]
+    tr_label_B = [t.tweet_label for t in train_B]
 
-    test_A= read_non_emoji_tweets(fp_test_A,"test",pre_process_url,pre_process_usr)
-    test_B = read_non_emoji_tweets(fp_test_B, "test", pre_process_url,pre_process_usr)
-    labels_A=get_label(fp_labels_A)
-    labels_B = get_label(fp_labels_B)
+    test_A = read_non_emoji_tweets(fp_test_A, "test", pre_process_url, pre_process_usr)
+    test_B = read_non_emoji_tweets(fp_test_B, "test", pre_process_url, pre_process_usr)
+    gold_A=get_label(fp_labels_A)
+    tst_labels_A = [v for k,v in gold_A.items()]
+    gold_B=get_label(fp_labels_B)
+    tst_labels_B = [v for k,v in gold_B.items()]
+
     # Print class stats
-    print_class_stats(train_A,train_B,labels_A,labels_B)
+    print_class_stats(train_A, train_B, gold_A, gold_B)
     # Generate features
-    feats_tr_A=get_features(train_A)
+    feats_tr_A = get_features(train_A)
+    feats_tst_A = get_features(test_A)
+    # feats_tr_B=get_features(train_B) # Same as A's features
+    # feats_tst_B=get_features(test_B) # Same as A's features
+
+    return feats_tr_A,feats_tst_A,feats_tr_A,feats_tst_A,tr_labels_A,tr_label_B,tst_labels_A,tst_labels_B
+
+
+if __name__ == '__main__':
+    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B=featurize()
+
+
+
 
     # unit test for features
     # TODO: differentiate vocab for A,B and emoji task
