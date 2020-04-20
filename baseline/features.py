@@ -484,10 +484,6 @@ def tweet_word_sentiment(data):
             tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
             result = senti.getSentiment(new_words)
-<<<<<<< HEAD
-            print("result")
-=======
->>>>>>> ea2e77697555fa8232814dda5613efb3f8e29d36
             max_,min_=result[0],result[0]
             for score in result:
                 max_=max(max_,score)
@@ -614,7 +610,7 @@ def featurize():
     tst_labels_B = [v for k,v in gold_B.items()]
 
     # Print class stats
-<<<<<<< HEAD
+
     print_class_stats(train_A, train_B, gold_A, gold_B)
     # Generate features
     feats_tr_A = get_features(train_A)
@@ -630,33 +626,3 @@ if __name__ == '__main__':
 
 
 
-=======
-    print_class_stats(train_A,train_B,labels_A,labels_B)
-
-    # write_tokens_to_txt(train_A, fn='baseline/corpus_A.txt')
-    # Generate features
-    # feats_tr_A=get_features(train_A)
->>>>>>> ea2e77697555fa8232814dda5613efb3f8e29d36
-
-    # unit test for features
-    # TODO: differentiate vocab for A,B and emoji task
-    # unigram_feature, bigram_feature = extract_ngrams(train_A)
-    # print(unigram_feature[2][:20], bigram_feature[2][:20])
-
-    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
-    # print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
-
-    word_arc_feature, cluster_arc_feature = dependency(train_A)
-    print(len(word_arc_feature[2]), word_arc_feature[2][:20])
-    print(len(cluster_arc_feature[2]), cluster_arc_feature[2][:20])
-
-    # tweet_word_sentiment(train_A)
-
-    # unit test for part of speech
-    # part_of_speech(train_A)
-
-    # unit test for prounciation
-    # pronunciations(train_A)
-
-    # unit test for capitalization
-    # capitalization(train_A)
