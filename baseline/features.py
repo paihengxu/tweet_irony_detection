@@ -22,6 +22,7 @@ from utils import read_vocabulary, write_tokens_to_txt
 
 # Define constant here
 MIN_FREQ = 3
+NUM_CLUSTER = 1000
 
 ### Part of Speech Implementation
 
@@ -274,21 +275,12 @@ def extract_ngrams(corpus):
         for idx, ele in enumerate(lower_tokens):
             # unigram
             unigram_dict[_id][unigram_vocab.get(ele, len(unigram_vocab))] = 1.
-            # if ele in unigram_vocab:
-            #     unigram_dict[_id][unigram_vocab[ele]] = 1.
-            # else:
-            #     # OOV words append to last element in the array
-            #     unigram_dict[_id][len(unigram_vocab)] = 1.
 
             if idx == len(lower_tokens) - 1:
                 continue
 
             # bigram
             bigram_dict[_id][bigram_vocab.get(ele, len(bigram_vocab))] = 1.
-            # if (ele, lower_tokens[idx+1]) in bigram_vocab:
-            #     bigram_dict[_id][bigram_vocab[(ele, lower_tokens[idx+1])]] = 1.
-            # else:
-            #     bigram_dict[_id][len(bigram_vocab)] = 1.
 
     return unigram_dict, bigram_dict
 
@@ -313,7 +305,7 @@ def read_brown_cluster(fn, min_freq):
     return cluster_vocab
 
 
-def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
+def brown_cluster_ngrams(corpus, num_cluster=NUM_CLUSTER, min_freq=MIN_FREQ):
     """
     input: whole dataset
     output: 2 dictionaries, key: tweet_id, value: 1-dimensional binary numpy array
@@ -340,27 +332,17 @@ def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
             # unigram
             unigram_dict[_id][cluster_vocab.get(ele, len(cluster_vocab))] = 1.
             bigram_dict[_id][cluster_vocab.get(ele, len(cluster_vocab))] = 1.
-            # if ele in cluster_vocab:
-            #     unigram_dict[_id][cluster_vocab[ele]] = 1.
-            #     bigram_dict[_id][cluster_vocab[ele]] = 1.
-            # else:
-            #     unigram_dict[_id][len(cluster_vocab)] = 1.
-            #     bigram_dict[_id][len(cluster_vocab)] = 1.
 
             if idx == len(lower_tokens) - 1:
                 continue
 
             # bigram
             bigram_dict[_id][cluster_vocab.get(lower_tokens[idx + 1], len(cluster_vocab))] = 1.
-            # if lower_tokens[idx + 1] in cluster_vocab:
-            #     bigram_dict[_id][cluster_vocab[lower_tokens[idx + 1]]] = 1.
-            # else:
-            #     bigram_dict[_id][len(cluster_vocab)] = 1.
 
     return unigram_dict, bigram_dict
 
 
-def dependency(corpus, num_cluster=1000, min_freq=MIN_FREQ):
+def dependency(corpus, num_cluster=NUM_CLUSTER, min_freq=MIN_FREQ):
     """
     input: whole dataset
     output: two dictionaries, key: tweet_id, value: 1-dimensional binary numpy array
@@ -409,9 +391,11 @@ def dependency(corpus, num_cluster=1000, min_freq=MIN_FREQ):
                     valid_arc[word_idx] = arc_idx
             else:
                 # tweets are separated by a empty line
-                lower_tweet_words = [t.lower() for t in sorted_corpus[idx-1].tweet_words()]
-                assert tweet_tokens == lower_tweet_words, \
-                    ' '.join(tweet_tokens) + '\n' + ' '.join(lower_tweet_words)
+
+                # There might be some exceptions due to space
+                # lower_tweet_words = [t.lower() for t in sorted_corpus[idx-1].tweet_words()]
+                # assert tweet_tokens == lower_tweet_words, \
+                #     ' '.join(tweet_tokens) + '\n' + ' '.join(lower_tweet_words)
                 # when encounter a empty line, summary and store last chunks, init. for next chunk
                 # summary
                 for k, v in valid_arc.items():
@@ -420,6 +404,7 @@ def dependency(corpus, num_cluster=1000, min_freq=MIN_FREQ):
                     cluster_tmp[cluster_vocab.get(dim1_word, len(cluster_vocab)), cluster_vocab.get(dim2_word, len(cluster_vocab))] = 1.
 
                 # flatten
+                # TODO: sparse representation needed
                 word_dict[idx] = word_tmp.flatten()
                 cluster_dict[idx] = cluster_tmp.flatten()
 
@@ -547,9 +532,9 @@ def get_features(data):
     print(len(caps))
 
     # TODO: doesnt return value for tweet_id 1683 - need some setting for empty strings
-    sent_senti=tweet_whole_sentiment(data)
-    print("5.Sentence Sentiment done")
-    print(len(sent_senti))
+    # sent_senti=tweet_whole_sentiment(data)
+    # print("5.Sentence Sentiment done")
+    # print(len(sent_senti))
 
     # word_senti=tweet_word_sentiment(data)
     # print("6. Words sentiment done")
@@ -609,9 +594,9 @@ def featurize():
 
     test_A = read_non_emoji_tweets(fp_test_A, "test", pre_process_url, pre_process_usr)
     test_B = read_non_emoji_tweets(fp_test_B, "test", pre_process_url, pre_process_usr)
-    gold_A=get_label(fp_labels_A)
+    gold_A = get_label(fp_labels_A)
     tst_labels_A = [v for k,v in gold_A.items()]
-    gold_B=get_label(fp_labels_B)
+    gold_B = get_label(fp_labels_B)
     tst_labels_B = [v for k,v in gold_B.items()]
 
     # Print class stats
