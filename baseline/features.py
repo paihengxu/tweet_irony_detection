@@ -519,6 +519,7 @@ def intensifier(data):
 
 
 def get_features(data):
+    # unit test for ngrams
     unigram_feature, bigram_feature = extract_ngrams(data)
     print("1. Ngrams generated")
     print(f'Size of unigram={len(unigram_feature)} x {len(unigram_feature[1])}')
@@ -545,7 +546,7 @@ def get_features(data):
     print("4. CAPS done")
     print(len(caps))
 
-    # TODO: doent return value for tweet_id 1683 - need some setting for empty strings
+    # TODO: doesnt return value for tweet_id 1683 - need some setting for empty strings
     sent_senti=tweet_whole_sentiment(data)
     print("5.Sentence Sentiment done")
     print(len(sent_senti))
@@ -554,10 +555,11 @@ def get_features(data):
     # print("6. Words sentiment done")
     # print(len(word_senti))
 
-    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(data)
-    # print("After Brown")
-    # print(f'Size of brown unigram={len(unigram_brown_feature)} x {len(unigram_brown_feature[1])}')
-    # print(f'Size of brown bigram={len(bigram_brown_feature)} x {len(bigram_brown_feature[1])}')
+    unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(data)
+    print("7.After Brown")
+    print(f'Size of brown unigram={len(unigram_brown_feature)} x {len(unigram_brown_feature[1])}')
+    print(f'Size of brown bigram={len(bigram_brown_feature)} x {len(bigram_brown_feature[1])}')
+
 
     Vectors=[]
     for t in data:
@@ -577,6 +579,9 @@ def get_features(data):
         vec.append(caps[t.tweet_id]['tweet_tag_cap_cnt'])
 
         # vec.append(sent_senti[t.tweet_id])
+
+        vec.extend(unigram_brown_feature[t.tweet_id])
+        vec.extend(bigram_brown_feature[t.tweet_id])
 
         Vectors.append(vec)
 
@@ -622,7 +627,8 @@ def featurize():
 
 
 if __name__ == '__main__':
-    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B=featurize()
+    featurize()
+    # feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B=featurize()
 
 
 
