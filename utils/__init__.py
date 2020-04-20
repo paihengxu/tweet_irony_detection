@@ -1,6 +1,7 @@
 import re
 import json
 import gzip
+import codecs
 
 from typing import Dict, List, NamedTuple
 from collections import Counter
@@ -112,7 +113,7 @@ def read_vocabulary(fn):
     """
     result = {}
     idx = 0
-    with open(fn, 'r') as inf:
+    with open(fn, 'r',encoding='utf8') as inf:
         for line in inf:
             k = line.strip().split('\t')
             if len(k) == 2:
@@ -123,7 +124,7 @@ def read_vocabulary(fn):
     return result
 
 def write_tokens_to_txt(corpus, fn):
-    with open(fn, 'w') as outf:
+    with codecs.open(fn, 'w', encoding='utf8') as outf:
         for data in corpus:
             tokens = data.tweet_words()
             lower_tokens = [t.lower() for t in tokens]
@@ -134,7 +135,7 @@ def write_dict_to_json(dic, fn):
     input: dic -> a dictionary to be dumped, fn -> filename
     # TODO: if the file is too large, we could store it to a compressed gz file
     """
-    with open(fn, 'w') as outf:
+    with codecs.open(fn, 'w', encoding='utf8') as outf:
         outf.write("{}".format(json.dumps(dic)))
 
 
@@ -144,7 +145,7 @@ def read_dict_from_json(fn):
     output: a dict
     """
     data = {}
-    with open(fn, 'r') as inf:
+    with codecs.open(fn, 'r', encoding='utf8') as inf:
         for line in inf:
             data.update(json.loads(line.strip()))
 

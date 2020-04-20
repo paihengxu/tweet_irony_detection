@@ -3,6 +3,7 @@ import re
 import os
 import sys
 import json
+import codecs
 import numpy as np
 from nltk.util import ngrams
 from collections import Counter
@@ -88,9 +89,10 @@ def part_of_speech(data):
             }
 
         # print(feature_dict)
-
+        return feature_dict
 
     except Exception as e:
+        print("In POS exceptions")
         print(str(e))
 
 ### Pronunciation Implementation
@@ -152,6 +154,7 @@ def pronunciations(data):
             }
 
         # print(feature_dict)
+        return feature_dict
 
     except Exception as e:
         print(str(e))
@@ -206,6 +209,7 @@ def capitalization(data):
                 'tweet_tag_cap_cnt' : tweet_tag_cap_cnt
             }
         # print(feature_dict)
+        return feature_dict
 
     except Exception as e:
         print(str(e))
@@ -230,7 +234,7 @@ def construct_vocabulary(corpus, min_freq=MIN_FREQ):
 
     # write to txt file
     def write_counter_to_file(freq, out_fn, min_freq=min_freq):
-        with open(out_fn, 'w') as outf:
+        with codecs.open(out_fn, 'w',encoding='utf8') as outf:
             for ele, count in freq.items():
                 if count >= min_freq:
                     if type(ele) == str:
@@ -292,14 +296,14 @@ def brown_cluster_ngrams(corpus, num_cluster=1000, min_freq=MIN_FREQ):
     # TODO: check for spacy implementation later
     cluster_fn = 'baseline/brown_cluster_{}.txt'.format(num_cluster)
     if not os.path.exists(cluster_fn):
-        print('brown cluster file not exist, run the repo first')
+        print('******brown cluster file not exist, run the repo first')
         write_tokens_to_txt(corpus, 'baseline/corpus_A.txt')
         sys.exit(1)
 
     cluster_vocab = {}
     idx = 0
     int2idx = {}
-    with open(cluster_fn, 'r') as inf:
+    with codecs.open(cluster_fn, 'r',encoding='utf8') as inf:
         for line in inf:
             # set min freq
             cluster_bit, word, freq = line.strip().split('\t')
@@ -366,11 +370,13 @@ def tweet_whole_sentiment(data):
             annotate=nlp_wrapper.annotate(text,properties={
                 'annotators': 'sentiment',
                 'outputFormat': 'json',
-                'timeout': 1000,})
+                'timeout': 10000,})
             for sentence in annotate["sentences"]:
                 feature_dict[tweet.tweet_id]=sentence["sentimentValue"]
+        # print(feature_dict)
         return feature_dict
     except Exception as e:
+        print("In whole sentiment exception")
         print(str(e))
     
     
@@ -392,14 +398,20 @@ def tweet_word_sentiment(data):
         for tweet in data:
             tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
+            print(new_words)
             result = senti.getSentiment(new_words)
+            print("Result=",result)
             max_,min_=result[0],result[0]
+            print("9")
             for score in result:
                 max_=max(max_,score)
                 min_=min(min_,score)
             feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
+        print(feature_dict)
         return feature_dict
+
     except Exception as e:
+        print("In word sentiment exception")
         print(str(e))
     
     
@@ -425,6 +437,47 @@ def intensifier(data):
     return feature_dict
 
 
+def get_features(data):
+    # unigram_feature, bigram_feature = extract_ngrams(data)
+    # print("1. Ngrams generated")
+    # print(f'Size of unigram={len(unigram_feature)} x {len(unigram_feature[1])}')
+    # print(f'Size of bigram={len(bigram_feature)} x {len(bigram_feature[1])}')
+
+
+    # unit test for part of speech
+    # pos_dict=part_of_speech(data)
+    # print("2. POS Tagging done")
+    # print(f'Len of pos ={len(pos_dict)} x 3')
+    # print(len(pos_dict[1]['tweet_tag_cnt']),
+    #       len(pos_dict[1]['tweet_tag_cnt']),
+    #      "1")
+
+
+    # unit test for prounciation
+    # pronounce_dict= pronunciations(data)
+    # print("3. Pronounciation done")
+    # print(len(pronounce_dict))
+
+
+    # unit test for capitalization
+    # caps=capitalization(data)
+    # print("4. CAPS done")
+    # print(len(caps))
+
+    # sent_senti=tweet_whole_sentiment(data)
+    # print("5.Sentence Sentiment done")
+    # print(len(sent_senti))
+
+    word_senti=tweet_word_sentiment(data)
+    # print("6. Words sentiment done")
+    # print(len(word_senti))
+
+    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
+    # print("After Brown")
+    # print(f'Size of brown unigram={len(unigram_brown_feature)} x {len(unigram_brown_feature[1])}')
+    # print(f'Size of brown bigram={len(bigram_brown_feature)} x {len(bigram_brown_feature[1])}')
+
+
 if __name__ == '__main__':
     # File paths from project level
     # fp_train_A = 'tweet_irony_detection/train/SemEval2018-T3-train-taskA.txt'
@@ -447,21 +500,9 @@ if __name__ == '__main__':
     labels_B = get_label(fp_labels_B)
     # Print class stats
     print_class_stats(train_A,train_B,labels_A,labels_B)
-
+    # Generate features
+    feats_tr_A=get_features(train_A)
 
     # unit test for features
     # TODO: differentiate vocab for A,B and emoji task
-    # unigram_feature, bigram_feature = extract_ngrams(train_A)
-    # print(unigram_feature[2][:20], bigram_feature[2][:20])
 
-    # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
-    # print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
-
-    # unit test for part of speech
-    # part_of_speech(train_A)
-
-    # unit test for prounciation
-    # pronunciations(train_A)
-
-    # unit test for capitalization
-    # capitalization(train_A)
