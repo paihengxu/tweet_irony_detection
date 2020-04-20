@@ -409,8 +409,9 @@ def dependency(corpus, num_cluster=1000, min_freq=MIN_FREQ):
                     valid_arc[word_idx] = arc_idx
             else:
                 # tweets are separated by a empty line
-                assert tweet_tokens == sorted_corpus[idx].tweet_words(), \
-                    ' '.join(tweet_tokens) + '\n' + ' '.join(sorted_corpus[idx].tweet_words())
+                lower_tweet_words = [t.lower() for t in sorted_corpus[idx-1].tweet_words()]
+                assert tweet_tokens == lower_tweet_words, \
+                    ' '.join(tweet_tokens) + '\n' + ' '.join(lower_tweet_words)
                 # when encounter a empty line, summary and store last chunks, init. for next chunk
                 # summary
                 for k, v in valid_arc.items():
@@ -583,7 +584,7 @@ if __name__ == '__main__':
 
     # write_tokens_to_txt(train_A, fn='baseline/corpus_A.txt')
     # Generate features
-    feats_tr_A=get_features(train_A)
+    # feats_tr_A=get_features(train_A)
 
     # unit test for features
     # TODO: differentiate vocab for A,B and emoji task
@@ -593,9 +594,9 @@ if __name__ == '__main__':
     # unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(train_A)
     # print(unigram_brown_feature[2][:20], bigram_brown_feature[2][:20])
 
-    # word_arc_feature, cluster_arc_feature = dependency(train_A)
-    # print(len(word_arc_feature[2]), word_arc_feature[2][:20])
-    # print(len(cluster_arc_feature[2]), cluster_arc_feature[2][:20])
+    word_arc_feature, cluster_arc_feature = dependency(train_A)
+    print(len(word_arc_feature[2]), word_arc_feature[2][:20])
+    print(len(cluster_arc_feature[2]), cluster_arc_feature[2][:20])
 
     # tweet_word_sentiment(train_A)
 
