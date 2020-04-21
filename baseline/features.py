@@ -591,7 +591,19 @@ def save_features(vectors,fn):
     return
 
 
-def featurize():
+def read_features(fp):
+    print("In Read features from CSV")
+    #input vectors: feature vectors, fn:filename
+    df = pd.read_csv(fp, sep=',',dtype=np.float64)
+    data=df.values.tolist()
+    # print(len(data))
+    # print(len(data[0]))
+    # print(data[0])
+    return data
+
+
+def featurize(generate):
+
     # File paths from project level
     # fp_train_A = 'tweet_irony_detection/train/SemEval2018-T3-train-taskA.txt'
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
@@ -619,6 +631,15 @@ def featurize():
     # Print class stats
 
     print_class_stats(train_A, train_B, gold_A, gold_B)
+
+    # Read features from files
+    if not generate:
+        feats_tr_A = read_features("feats_tr_A.csv")
+        feats_tst_A= read_features("feats_tst_A.csv")
+        feats_tr_B= read_features("feats_tr_B.csv")
+        feats_tst_B=read_features("feats_tst_B.csv")
+        return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
+
     # Generate features
     feats_tr_A = get_features(train_A)
     feats_tst_A = get_features(test_A)
@@ -629,14 +650,10 @@ def featurize():
     save_features(feats_tst_A,"feats_tst_A.csv")
     save_features(feats_tr_B,"feats_tr_B.csv")
     save_features(feats_tst_B,"feats_tst_B.csv")
-    
-
-    return feats_tr_A,feats_tst_A,feats_tr_A,feats_tst_A,tr_labels_A,tr_label_B,tst_labels_A,tst_labels_B
+    return feats_tr_A,feats_tst_A,feats_tr_B,feats_tst_B,tr_labels_A,tr_label_B,tst_labels_A,tst_labels_B
 
 
 if __name__ == '__main__':
-    featurize()
-    # feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B=featurize()
-
-
+    generate=True
+    featurize(generate)
 

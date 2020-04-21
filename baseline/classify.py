@@ -20,8 +20,13 @@ def fit_test_model(train, train_label, test, test_label, model):
     print('report:', report, sep='\n')
 
 
+
+
+
 def main():
-    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B = featurize()
+    generate=True
+    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B = featurize(generate)
+
 
     # majority guess as another baseline
     major_model = DummyClassifier(strategy="most_frequent")
