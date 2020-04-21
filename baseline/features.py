@@ -5,6 +5,7 @@ import sys
 import json
 import codecs
 import numpy as np
+import pandas as pd
 from nltk.util import ngrams
 from collections import Counter
 from pycorenlp import StanfordCoreNLP
@@ -431,11 +432,13 @@ def tweet_whole_sentiment(data):
             keys: tweet_id, values: sentimentValues (1--Positive,2--Neutral,3--Negative
     '''
     try:
-        nlp_wrapper = StanfordCoreNLP('http://localhost:9000')
+        nlp_wrapper = StanfordCoreNLP('http://localhost:5000')
         feature_dict={}
         for tweet in data:
             tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
+            if not new_words:
+                feature_dict[tweet.tweet_id] = 2
             text=" ".join(new_words)
             annotate=nlp_wrapper.annotate(text,properties={
                 'annotators': 'sentiment',
@@ -468,6 +471,9 @@ def tweet_word_sentiment(data):
         for tweet in data:
             tokenized= tweet.tweet_words()
             new_words= [word for word in tokenized if word.isalnum()]
+            if not new_words:
+                feature_dict[tweet.tweet_id]={"max":0,"min":0,"distance":0}
+                continue
             result = senti.getSentiment(new_words)
             max_,min_=result[0],result[0]
             for score in result:
@@ -532,13 +538,13 @@ def get_features(data):
     print(len(caps))
 
     # TODO: doesnt return value for tweet_id 1683 - need some setting for empty strings
-    # sent_senti=tweet_whole_sentiment(data)
-    # print("5.Sentence Sentiment done")
-    # print(len(sent_senti))
+    sent_senti=tweet_whole_sentiment(data)
+    print("5.Sentence Sentiment done")
+    print(len(sent_senti))
 
-    # word_senti=tweet_word_sentiment(data)
-    # print("6. Words sentiment done")
-    # print(len(word_senti))
+    word_senti=tweet_word_sentiment(data)
+    print("6. Words sentiment done")
+    print(len(word_senti))
 
     unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(data)
     print("7.After Brown")
@@ -562,8 +568,13 @@ def get_features(data):
         vec.append(caps[t.tweet_id]['tweet_initial_cap_cnt'])
         vec.append(caps[t.tweet_id]['tweet_all_cap_cnt'])
         vec.append(caps[t.tweet_id]['tweet_tag_cap_cnt'])
+        
+        vec.append(sent_senti[t.tweet_id])
 
-        # vec.append(sent_senti[t.tweet_id])
+        vec.append(word_senti[t.tweet_id]['max'])
+        vec.append(word_senti[t.tweet_id]['min'])
+        vec.append(word_senti[t.tweet_id]['distance'])
+        
 
         vec.extend(unigram_brown_feature[t.tweet_id])
         vec.extend(bigram_brown_feature[t.tweet_id])
@@ -572,6 +583,12 @@ def get_features(data):
 
     print(len(Vectors),len(Vectors[0]))
     return Vectors
+
+def save_features(vectors,fn):
+    #input vectors: feature vectors, fn:filename
+    df=pd.DataFrame(vectors)
+    df.to_csv(fn)
+    return
 
 
 def featurize():
@@ -605,8 +622,14 @@ def featurize():
     # Generate features
     feats_tr_A = get_features(train_A)
     feats_tst_A = get_features(test_A)
-    # feats_tr_B=get_features(train_B) # Same as A's features
-    # feats_tst_B=get_features(test_B) # Same as A's features
+    feats_tr_B=get_features(train_B) # Same as A's features
+    feats_tst_B=get_features(test_B) # Same as A's features
+    
+    save_features(feats_tr_A,"feats_tr_A.csv")
+    save_features(feats_tst_A,"feats_tst_A.csv")
+    save_features(feats_tr_B,"feats_tr_B.csv")
+    save_features(feats_tst_B,"feats_tst_B.csv")
+    
 
     return feats_tr_A,feats_tst_A,feats_tr_A,feats_tst_A,tr_labels_A,tr_label_B,tst_labels_A,tst_labels_B
 
