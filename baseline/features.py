@@ -597,7 +597,7 @@ def word_affect(data):
         print(str(e))
     
 def readability(data):
-        '''
+    '''
     input: whole corpus
     output: 1 dicts for readability, 
             keys: tweet_id, values: dict (keys={"mean","median","mode","sigma","min","max"})
@@ -626,7 +626,7 @@ def readability(data):
 
 
 def prosodic(data):
-        '''
+    '''
     input: whole corpus
     output: 1 dicts for prosodic variations, 
             keys: tweet_id, values: dict (keys={"repeat","total_character","ratio"})
