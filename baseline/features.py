@@ -509,6 +509,36 @@ def intensifier(data):
     return feature_dict
 
 
+def emoji_senti_eval(data):
+    '''
+    input: takes tweet's emojis.
+    each emoji's negative, neutral,positive scores are extracted
+    we average for all emojis in tweet these values
+    :return: dict with keys: tweet_id, values: [all_emojis_avg_negative_prob, all_emojis_avg_neutral_prob, \
+                       all_emojis_avg_positive_prob]
+    '''
+    emoji_senti_file = 'emoji_senti_data/Emoji_Sentiment_Data_v1.0.csv'
+    df = pd.read_csv(emoji_senti_file)
+    emoji_corpus={}
+    for name, total, neg, neut,pos in zip(df['Unicode name'],df['Occurrences'], \
+                                          df['Negative'],df['Neutral'],df['Positive']):
+        emoji_corpus[name.lower()]=[neg/total,neut/total,pos/total]
+
+    feature_dict={}
+    for tweet in data:
+        all_emojis=tweet.tweet_emojis
+        count=len(all_emojis)
+        values=[0,0,0]
+        if count>0:
+            for e in all_emojis:
+                score=emoji_corpus.get(e,None)
+                if score is not None:
+                    score=np.array(score)
+                    values+=score
+            values=[x/count for x in values]
+        feature_dict[tweet.tweet_id]=values
+    return feature_dict
+
 def get_features(data):
     # unit test for ngrams
     unigram_feature, bigram_feature = extract_ngrams(data)
@@ -521,9 +551,7 @@ def get_features(data):
     pos_dict=part_of_speech(data)
     print("2. POS Tagging done")
     print(f'Len of pos ={len(pos_dict)} x 3')
-    # print(len(pos_dict[1]['tweet_tag_cnt']),
-    #       len(pos_dict[1]['tweet_tag_cnt']),
-    #      "1")
+
 
 
     # unit test for prounciation
@@ -537,7 +565,6 @@ def get_features(data):
     print("4. CAPS done")
     print(len(caps))
 
-    # TODO: doesnt return value for tweet_id 1683 - need some setting for empty strings
     sent_senti=tweet_whole_sentiment(data)
     print("5.Sentence Sentiment done")
     print(len(sent_senti))
@@ -550,6 +577,10 @@ def get_features(data):
     print("7.After Brown")
     print(f'Size of brown unigram={len(unigram_brown_feature)} x {len(unigram_brown_feature[1])}')
     print(f'Size of brown bigram={len(bigram_brown_feature)} x {len(bigram_brown_feature[1])}')
+
+    emoji_senti=emoji_senti_eval(data)
+    print("8. After emoji senti eval")
+    print(len(emoji_senti))
 
 
     Vectors=[]
@@ -568,18 +599,21 @@ def get_features(data):
         vec.append(caps[t.tweet_id]['tweet_initial_cap_cnt'])
         vec.append(caps[t.tweet_id]['tweet_all_cap_cnt'])
         vec.append(caps[t.tweet_id]['tweet_tag_cap_cnt'])
-        
+
         vec.append(sent_senti[t.tweet_id])
 
         vec.append(word_senti[t.tweet_id]['max'])
         vec.append(word_senti[t.tweet_id]['min'])
         vec.append(word_senti[t.tweet_id]['distance'])
-        
+
 
         vec.extend(unigram_brown_feature[t.tweet_id])
         vec.extend(bigram_brown_feature[t.tweet_id])
 
+        vec.extend(emoji_senti[t.tweet_id])
+
         Vectors.append(vec)
+
 
     print(len(Vectors),len(Vectors[0]))
     return Vectors
@@ -603,7 +637,6 @@ def read_features(fp):
 
 
 def featurize(generate):
-
     # File paths from project level
     # fp_train_A = 'tweet_irony_detection/train/SemEval2018-T3-train-taskA.txt'
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
@@ -612,6 +645,7 @@ def featurize(generate):
     fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
     fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
     fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
+
 
     # Training data for task A and B , test data & correct labels for both tasks
     pre_process_url = True  # Set to remove URLs
@@ -632,6 +666,7 @@ def featurize(generate):
 
     print_class_stats(train_A, train_B, gold_A, gold_B)
 
+
     # Read features from files
     if not generate:
         feats_tr_A = read_features("feats_tr_A.csv")
@@ -645,6 +680,7 @@ def featurize(generate):
     feats_tst_A = get_features(test_A)
     feats_tr_B=get_features(train_B) # Same as A's features
     feats_tst_B=get_features(test_B) # Same as A's features
+
     
     save_features(feats_tr_A,"feats_tr_A.csv")
     save_features(feats_tst_A,"feats_tst_A.csv")

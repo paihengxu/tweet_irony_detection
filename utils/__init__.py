@@ -17,6 +17,7 @@ class Tweet(NamedTuple):
     tweet_id: int
     tweet_label:int
     tweet_text:str
+    tweet_emojis:list
 
     def tweet_words(self):
         return tknzr.tokenize(self.tweet_text)
@@ -24,7 +25,8 @@ class Tweet(NamedTuple):
     def __repr__(self):
         return (f"tweet_id: {self.tweet_id}\n" +
                 f"tweet_label: {self.tweet_label}\n" +
-                f"tweet_text: {self.tweet_text}")
+                f"tweet_text: {self.tweet_text}\n" +
+                f"tweet_emojis:{self.tweet_emojis}")
 
 
 def pre_process_tweet_url(text):
@@ -40,12 +42,24 @@ def pre_process_tweet_url(text):
 
 
 def pre_process_usrname(text):
-    #TODO: *USR* would be tokenized into three tokens
     processed_text = re.sub(r"@\w+", "USR", text)
     # print(f'{count}:pre-process: {text}')
     # print(f'{count}:post-process:{processed_text} \n')
     return processed_text
 
+def get_emojis(text):
+    emojis=[]
+    if re.match(r'.*\:.+\:.*',text):
+        emojis=re.findall(r"\:([a-z\_\-]+)\:",text)
+
+    if len(emojis)>0:
+        format_emojis=[]
+        for emoji in emojis:
+            emoji=emoji.replace("_"," ")
+            emoji=emoji.replace("-"," ")
+            format_emojis.append(emoji)
+        emojis=format_emojis
+    return emojis
 
 def read_non_emoji_tweets(fp,type,pre_process_url,pre_process_usr):
     '''
@@ -71,7 +85,8 @@ def read_non_emoji_tweets(fp,type,pre_process_url,pre_process_usr):
                     text=pre_process_tweet_url(text)
                 if pre_process_usr:
                     text=pre_process_usrname(text)
-                tweets.append(Tweet(id,label,text))
+                emojis=get_emojis(text)
+                tweets.append(Tweet(id,label,text,emojis))
     return tweets
 
 def get_label(fp):
