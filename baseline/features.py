@@ -714,7 +714,21 @@ def get_features(data):
     print("8. After emoji senti eval")
     print(len(emoji_senti))
 
-
+    
+    word_aff=word_affect(data)
+    print("9. Word affect done")
+    print(len(word_aff))
+    
+    read=readability(data)
+    print("10. readability done")
+    print(len(read))
+    
+    pros=prosodic(data)
+    print("11. prosodic variations done")
+    print(len(pros))
+    
+    
+    
     Vectors=[]
     for t in data:
         vec=[]
@@ -743,6 +757,29 @@ def get_features(data):
         vec.extend(bigram_brown_feature[t.tweet_id])
 
         vec.extend(emoji_senti[t.tweet_id])
+        
+        vec.extend(word_aff[t.tweet_id]['vmax'])
+        vec.extend(word_aff[t.tweet_id]['vmin'])
+        vec.extend(word_aff[t.tweet_id]['vdistance'])
+        vec.extend(word_aff[t.tweet_id]['amax'])
+        vec.extend(word_aff[t.tweet_id]['amin'])
+        vec.extend(word_aff[t.tweet_id]['adistance'])
+        vec.extend(word_aff[t.tweet_id]['dmax'])
+        vec.extend(word_aff[t.tweet_id]['dmin'])
+        vec.extend(word_aff[t.tweet_id]['ddistance'])
+        
+        
+        vec.extend(read[t.tweet_id]["mean"])
+        vec.extend(read[t.tweet_id]["median"])
+        vec.extend(read[t.tweet_id]["mode"])
+        vec.extend(read[t.tweet_id]["sigma"])
+        vec.extend(read[t.tweet_id]["min"])
+        vec.extend(read[t.tweet_id]["max"])
+        
+        vec.extend(pros[t.tweet_id]["repeat"])
+        vec.extend(pros[t.tweet_id]["total_character"])
+        vec.extend(pros[t.tweet_id]["ratio"])
+        
 
         Vectors.append(vec)
 
