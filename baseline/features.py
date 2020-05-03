@@ -759,27 +759,28 @@ def get_features(data):
 
         vec.extend(emoji_senti[t.tweet_id])
         
-        vec.extend(word_aff[t.tweet_id]['vmax'])
-        vec.extend(word_aff[t.tweet_id]['vmin'])
-        vec.extend(word_aff[t.tweet_id]['vdistance'])
-        vec.extend(word_aff[t.tweet_id]['amax'])
-        vec.extend(word_aff[t.tweet_id]['amin'])
-        vec.extend(word_aff[t.tweet_id]['adistance'])
-        vec.extend(word_aff[t.tweet_id]['dmax'])
-        vec.extend(word_aff[t.tweet_id]['dmin'])
-        vec.extend(word_aff[t.tweet_id]['ddistance'])
+        
+        vec.append(word_aff[t.tweet_id]['vmax'])
+        vec.append(word_aff[t.tweet_id]['vmin'])
+        vec.append(word_aff[t.tweet_id]['vdistance'])
+        vec.append(word_aff[t.tweet_id]['amax'])
+        vec.append(word_aff[t.tweet_id]['amin'])
+        vec.append(word_aff[t.tweet_id]['adistance'])
+        vec.append(word_aff[t.tweet_id]['dmax'])
+        vec.append(word_aff[t.tweet_id]['dmin'])
+        vec.append(word_aff[t.tweet_id]['ddistance'])
         
         
-        vec.extend(read[t.tweet_id]["mean"])
-        vec.extend(read[t.tweet_id]["median"])
-        vec.extend(read[t.tweet_id]["mode"])
-        vec.extend(read[t.tweet_id]["sigma"])
-        vec.extend(read[t.tweet_id]["min"])
-        vec.extend(read[t.tweet_id]["max"])
+        vec.append(read[t.tweet_id]["mean"])
+        vec.append(read[t.tweet_id]["median"])
+        vec.append(read[t.tweet_id]["mode"])
+        vec.append(read[t.tweet_id]["sigma"])
+        vec.append(read[t.tweet_id]["min"])
+        vec.append(read[t.tweet_id]["max"])
         
-        vec.extend(pros[t.tweet_id]["repeat"])
-        vec.extend(pros[t.tweet_id]["total_character"])
-        vec.extend(pros[t.tweet_id]["ratio"])
+        vec.append(pros[t.tweet_id]["repeat"])
+        vec.append(pros[t.tweet_id]["total_character"])
+        vec.append(pros[t.tweet_id]["ratio"])
         
 
         Vectors.append(vec)
