@@ -662,7 +662,7 @@ def prosodic(data):
                     if curr_repeat>=3:
                         presence_of_repeat=True
             ratio=len(visited_character)/total_character if total_character else 0
-            feature_dict[tweet.tweet_id]={"repeat":presence_of_repeat, "total_character":total_character,"ratio":ratio}
+            feature_dict[tweet.tweet_id]={"repeat":presence_of_repeat*1, "total_character":total_character,"ratio":ratio}
             
                         
         return feature_dict
@@ -778,7 +778,7 @@ def get_features(data):
         
         vec.append(read[t.tweet_id]["mean"])
         vec.append(read[t.tweet_id]["median"])
-        vec.append(read[t.tweet_id]["mode"])
+        vec.extend(read[t.tweet_id]["mode"])
         vec.append(read[t.tweet_id]["sigma"])
         vec.append(read[t.tweet_id]["min"])
         vec.append(read[t.tweet_id]["max"])
