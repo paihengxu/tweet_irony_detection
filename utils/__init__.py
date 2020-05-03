@@ -138,6 +138,21 @@ def read_vocabulary(fn):
             idx += 1
     return result
 
+
+def read_vocabulary_with_occurrence(fn, n):
+    """
+    Read file to a dict with value as occurrence
+    Used for downstream sent score calculation
+    """
+    result = {}
+    with open(fn, 'r',encoding='utf8') as inf:
+        for line in inf:
+            k = line.strip().split('\t')
+            assert len(k) == n+1
+            result[tuple(k[:n])] = int(k[-1])
+    return result
+
+
 def write_tokens_to_txt(corpus, fn):
     sorted_corpus = sorted(corpus, key=lambda tweet: tweet.tweet_id)
     with codecs.open(fn, 'w', encoding='utf8') as outf:
