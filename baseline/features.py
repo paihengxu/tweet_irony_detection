@@ -681,7 +681,7 @@ def featurize(generate):
     feats_tr_B=get_features(train_B) # Same as A's features
     feats_tst_B=get_features(test_B) # Same as A's features
 
-    
+
     save_features(feats_tr_A,"feats_tr_A.csv")
     save_features(feats_tst_A,"feats_tst_A.csv")
     save_features(feats_tr_B,"feats_tr_B.csv")
