@@ -276,6 +276,7 @@ def extract_ngrams(corpus):
         tokens = data.tweet_words()
         lower_tokens = [t.lower() for t in tokens]
         _id = data.tweet_id
+        # +1 for OOV
         unigram_dict[_id] = np.zeros(len(unigram_vocab) + 1)
         bigram_dict[_id] = np.zeros(len(bigram_vocab) + 1)
         for idx, ele in enumerate(lower_tokens):
@@ -286,7 +287,7 @@ def extract_ngrams(corpus):
                 continue
 
             # bigram
-            bigram_dict[_id][bigram_vocab.get(ele, len(bigram_vocab))] = 1.
+            bigram_dict[_id][bigram_vocab.get((ele, lower_tokens[idx+1]), len(bigram_vocab))] = 1.
 
     return unigram_dict, bigram_dict
 
