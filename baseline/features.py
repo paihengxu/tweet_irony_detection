@@ -24,6 +24,7 @@ from utils import read_vocabulary, write_tokens_to_txt
 
 # word embedding libraries
 from allennlp.commands.elmo import ElmoEmbedder
+import sister
 
 # Define constant here
 MIN_FREQ = 3
@@ -804,9 +805,9 @@ def elmo_embedding(data):
     # Return
     dict : 
         tweet_id : int -> {
-            'tweet_tag_cnt' -> nparray : [45 x 1 vector in which each index represent the count of each tag in tagset],
-            'tweet_tag_ratio' -> nparray : [45 x 1 vector in which each index represent the ratio of each tag in tagset],
-            'tweet_lexical_density' -> float : tweet lexical density
+            'context_independent_layer' : [context_independent_layer_min, context_independent_layer_max, context_independent_layer_mean] (3072 x 1),
+            'LSTM_layer1' : [LSTM_layer1_min, LSTM_layer1_max, LSTM_layer1_mean] (3072 x 1),
+            'LSTM_layer2' : [LSTM_layer2_min, LSTM_layer2_max, LSTM_layer2_mean] (3072 x 1)
         }
     
     '''
@@ -855,7 +856,42 @@ def elmo_embedding(data):
                 'LSTM_layer2' : np.concatenate([LSTM_layer2_min, LSTM_layer2_max, LSTM_layer2_mean])
             }
             
-            print(feature_dict)
+        return feature_dict
+
+    except Exception as e:
+        print("In ELMO exceptions")
+        print(str(e))
+        
+def fast_text_embedding(data):
+    '''
+    Get skipgram word embeddings and convert into feature
+    # Parameters
+    data : (Tweet : namedTuple) list
+
+    # Return
+    dict : 
+        tweet_id : int -> {
+            'tweet_tag_cnt' -> nparray : [45 x 1 vector in which each index represent the count of each tag in tagset],
+            'tweet_tag_ratio' -> nparray : [45 x 1 vector in which each index represent the ratio of each tag in tagset],
+            'tweet_lexical_density' -> float : tweet lexical density
+        }
+    
+    '''
+    feature_dict = {}
+    try:
+        
+        for tweet in data:
+
+            # tokenize and tag tweet
+            tokenized = tweet.tweet_words()
+            
+            embedder = sister.MeanEmbedding(lang="en")
+            
+            vector = embedder(' '.join(tokenized))
+            
+            feature_dict[tweet.tweet_id] = {
+                'embedding' : vector
+            }
             
         return feature_dict
 
@@ -935,21 +971,6 @@ def featurize(generate):
 
 
 if __name__ == '__main__':
-    # File paths from project level
-    # fp_train_A = 'tweet_irony_detection/train/SemEval2018-T3-train-taskA.txt'
-    fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
-    fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
-    fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
-    fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
-    fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
-    fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
-
-    # Training data for task A and B , test data & correct labels for both tasks
-    pre_process_url = True  # Set to remove URLs
-    pre_process_usr = True
-    train_A = read_non_emoji_tweets(fp_train_A, "train", pre_process_url, pre_process_usr)
-    train_B = read_non_emoji_tweets(fp_train_B, "train", pre_process_url, pre_process_usr)
-    print(elmo_embedding(train_A))
-    # generate=True
-    # featurize(generate)
+    generate=True
+    featurize(generate)
 
