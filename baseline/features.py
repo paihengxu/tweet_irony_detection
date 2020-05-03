@@ -20,7 +20,7 @@ nltk.download('tagsets')
 from utils import read_non_emoji_tweets
 from utils import get_label
 from utils import print_class_stats
-from utils import read_vocabulary, write_tokens_to_txt
+from utils import read_vocabulary, write_tokens_to_txt,write_dict_to_json,read_dict_from_json
 
 # word embedding libraries
 from allennlp.commands.elmo import ElmoEmbedder
@@ -677,9 +677,21 @@ def prosodic(data):
 
 
 
-def get_features(data):
+def get_features(data,generate):
     # unit test for ngrams
-    unigram_feature, bigram_feature = extract_ngrams(data)
+    if generate:
+        unigram_feature, bigram_feature = extract_ngrams(data)
+        file=data+"unigram_feature"
+        write_dict_to_json(unigram_feature,file)
+        file = data + "bigram_feature"
+        write_dict_to_json(bigram_feature,file)
+    else:
+        file = data + "unigram_feature"
+        unigram_feature=read_dict_from_json(file)
+        file = data + "bigram_feature"
+        bigram_feature=read_dict_from_json(file)
+
+
     print("1. Ngrams generated")
     print(f'Size of unigram={len(unigram_feature)} x {len(unigram_feature[1])}')
     print(f'Size of bigram={len(bigram_feature)} x {len(bigram_feature[1])}')
@@ -950,24 +962,24 @@ def featurize(generate):
 
 
     # Read features from files
-    if not generate:
-        feats_tr_A = read_features("feats_tr_A.csv")
-        feats_tst_A= read_features("feats_tst_A.csv")
-        feats_tr_B= read_features("feats_tr_B.csv")
-        feats_tst_B=read_features("feats_tst_B.csv")
-        return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
+    # if not generate:
+    #     feats_tr_A = read_features("feats_tr_A.csv")
+    #     feats_tst_A= read_features("feats_tst_A.csv")
+    #     feats_tr_B= read_features("feats_tr_B.csv")
+    #     feats_tst_B=read_features("feats_tst_B.csv")
+    #     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
     # Generate features
-    feats_tr_A = get_features(train_A)
-    feats_tst_A = get_features(test_A)
-    feats_tr_B=get_features(train_B) # Same as A's features
-    feats_tst_B=get_features(test_B) # Same as A's features
+    feats_tr_A = get_features(train_A,generate)
+    feats_tst_A = get_features(test_A,generate)
+    feats_tr_B=get_features(train_B,generate) # Same as A's features
+    feats_tst_B=get_features(test_B,generate) # Same as A's features
 
 
-    save_features(feats_tr_A,"feats_tr_A.csv")
-    save_features(feats_tst_A,"feats_tst_A.csv")
-    save_features(feats_tr_B,"feats_tr_B.csv")
-    save_features(feats_tst_B,"feats_tst_B.csv")
+    # save_features(feats_tr_A,"feats_tr_A.csv")
+    # save_features(feats_tst_A,"feats_tst_A.csv")
+    # save_features(feats_tr_B,"feats_tr_B.csv")
+    # save_features(feats_tst_B,"feats_tst_B.csv")
     return feats_tr_A,feats_tst_A,feats_tr_B,feats_tst_B,tr_labels_A,tr_label_B,tst_labels_A,tst_labels_B
 
 
