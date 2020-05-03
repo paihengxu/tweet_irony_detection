@@ -6,6 +6,7 @@ import json
 import codecs
 import numpy as np
 import pandas as pd
+from scipy import stats
 from nltk.util import ngrams
 from collections import Counter
 from pycorenlp import StanfordCoreNLP
