@@ -463,28 +463,28 @@ def tweet_word_sentiment(data):
                                     distance-- difference between highest score and lowest score
     '''
     feature_dict={}
-    try:
-        senti = PySentiStr()
-        senti.setSentiStrengthPath('./SentiStrength.jar')
-        senti.setSentiStrengthLanguageFolderPath('./SentiStrengthData/')
+#     try:
+    senti = PySentiStr()
+    senti.setSentiStrengthPath('./SentiStrength.jar')
+    senti.setSentiStrengthLanguageFolderPath('./SentiStrengthData/')
 
-        for tweet in data:
-            tokenized= tweet.tweet_words()
-            new_words= [word for word in tokenized if word.isalnum()]
-            if not new_words:
-                feature_dict[tweet.tweet_id]={"max":0,"min":0,"distance":0}
-                continue
-            result = senti.getSentiment(new_words)
-            max_,min_=result[0],result[0]
-            for score in result:
-                max_=max(max_,score)
-                min_=min(min_,score)
-            feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
-        return feature_dict
+    for tweet in data:
+        tokenized= tweet.tweet_words()
+        new_words= [word for word in tokenized if word.isalnum()]
+        if not new_words:
+            feature_dict[tweet.tweet_id]={"max":0,"min":0,"distance":0}
+            continue
+        result = senti.getSentiment(new_words)
+        max_,min_=result[0],result[0]
+        for score in result:
+            max_=max(max_,score)
+            min_=min(min_,score)
+        feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
+    return feature_dict
 
-    except Exception as e:
-        print("In word sentiment exception")
-        print(str(e))
+#     except Exception as e:
+#         print("In word sentiment exception")
+#         print(str(e))
     
     
 def intensifier(data):
@@ -552,7 +552,7 @@ def word_affect(data):
     '''
     feature_dict={}
     try:
-        df=pd.read_csv('Ratings_Warriner_et_al.csv',index_col=0)
+        df=pd.read_csv('BRM-emot-submit.csv',index_col=0)
         Words=set(df['Word'].values.tolist())
         keys=['V.Mean.Sum','A.Mean.Sum','D.Mean.Sum']
         for tweet in data:
