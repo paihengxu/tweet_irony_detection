@@ -103,3 +103,4 @@ htmlcov
 *.orig
 CHANGELOG.temp
 stanford-corenlp-full-2018-10-05/build.xml
+*.csv
