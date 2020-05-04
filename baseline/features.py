@@ -91,7 +91,7 @@ def part_of_speech(data):
 #                 'tweet_tag_ratio' : tweet_tag_ratio_vec,
 #                 'tweet_lexical_density' : tweet_lexical_density
 #             }
-            feature_dict[tweet.tweet_id]=[tweet_tag_cnt_vec,tweet_tag_ratio_vec,tweet_lexical_density]
+            feature_dict[tweet.tweet_id]=[float(tweet_tag_cnt_vec),float(tweet_tag_ratio_vec),float(tweet_lexical_density)]
 
         # print(feature_dict)
         return feature_dict
