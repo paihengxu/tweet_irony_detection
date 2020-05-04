@@ -153,10 +153,11 @@ def pronunciations(data):
                 if syllable_count(token) > 3:
                     tweet_three_more_syllables_cnt += 1
 
-            feature_dict[tweet.tweet_id] = {
-                'tweet_no_vowel_cnt' : tweet_no_vowel_cnt,
-                'tweet_three_more_syllables_cnt' : tweet_three_more_syllables_cnt
-            }
+#             feature_dict[tweet.tweet_id] = {
+#                 'tweet_no_vowel_cnt' : tweet_no_vowel_cnt,
+#                 'tweet_three_more_syllables_cnt' : tweet_three_more_syllables_cnt
+#             }
+            feature_dict[tweet.tweet_id]=[tweet_no_vowel_cnt,tweet_three_more_syllables_cnt]
 
         # print(feature_dict)
         return feature_dict
