@@ -17,7 +17,6 @@ def twitter_sentiment_score(corpus, n):
     """
     input: whole dataset, n indicating n-gram
     output: two dictionaries, key: tweet_id, value: 1-dimensional numpy array
-    Done: Out of Vocabulary (OOV) words
     """
     if not os.path.exists('behavior_model/positive_{}_vocab.txt'.format(n)) or not os.path.exists(
         'behavior_model/negative_{}_vocab.txt'.format(n)):
@@ -52,7 +51,15 @@ def twitter_sentiment_score(corpus, n):
 
             senti_features[_id] += senti_score
 
-    return senti_features
+        # assign 0 to empty score tweets
+        if _id not in senti_features:
+            senti_features[_id] = 0.
+
+    list_senti_features = {}
+    for k, v in senti_features.items():
+        list_senti_features[k] = [v]
+
+    return list_senti_features
 
 
 
@@ -182,11 +189,6 @@ def prosodic(data):
         print(str(e))
 
 
-
-
-
-
-
 if __name__ == '__main__':
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
@@ -214,18 +216,19 @@ if __name__ == '__main__':
     for name, dataset in name_2_dataset.items():
         feature_2 = twitter_sentiment_score(dataset, 2)
         feature_3 = twitter_sentiment_score(dataset, 3)        
-        word_aff=word_affect(dataset)    
-        read=readability(dataset)
-        pros=prosodic(dataset)
+        # word_aff=word_affect(dataset)
+        # read=readability(dataset)
+        # pros=prosodic(dataset)
                 
 
-#         write_dict_to_json(feature_2, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
-#                                                                                    feature_name='senti_bigram'))
+        write_dict_to_json(feature_2, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
+                                                                                   feature_name='senti_bigram'))
 
-#         write_dict_to_json(feature_3, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
-#                                                                                    feature_name='senti_trigram'))
-        write_dict_to_json(word_aff, fn='.\features\dataset\{dataset}_{feature_name}.json.gz'.format(dataset=name,
-                                                                                   feature_name='word_affect'))
+        write_dict_to_json(feature_3, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
+                                                                                   feature_name='senti_trigram'))
+
+#         write_dict_to_json(word_aff, fn='.\features\dataset\{dataset}_{feature_name}.json.gz'.format(dataset=name,
+#                                                                                    feature_name='word_affect'))
 #         write_dict_to_json(read, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
 #                                                                                    feature_name='readability'))
 #         write_dict_to_json(pros, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
