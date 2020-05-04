@@ -451,7 +451,8 @@ def tweet_whole_sentiment(data):
                 'outputFormat': 'json',
                 'timeout': 10000,})
             for sentence in annotate["sentences"]:
-                feature_dict[tweet.tweet_id]=sentence["sentimentValue"]
+#                 feature_dict[tweet.tweet_id]=sentence["sentimentValue"]
+                feature_dict[tweet.tweet_id]=[sentence["sentimentValue"]]
         # print(feature_dict)
         return feature_dict
     except Exception as e:
@@ -485,7 +486,8 @@ def tweet_word_sentiment(data):
         for score in result:
             max_=max(max_,score)
             min_=min(min_,score)
-        feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
+        #feature_dict[tweet.tweet_id]={"max":max_,"min":min_,"distance":max_-min_}
+        feature_dict[tweet.tweet_id]=[max_,min_,max_-min_]
     return feature_dict
 
 #     except Exception as e:
@@ -508,10 +510,12 @@ def intensifier(data):
             tokenized= tweet.tweet_words()
             for word in tokenized:
                 if word in intense:
-                    feature_dict[tweet.tweet_id]=1
+#                     feature_dict[tweet.tweet_id]=1
+                    feature_dict[tweet.tweet_id]=[1]
                     break
             if not tweet.tweet_id in feature_dict:
-                feature_dict[tweet.tweet_id]=0      
+#                 feature_dict[tweet.tweet_id]=0
+                feature_dict[tweet.tweet_id]=[0]
     return feature_dict
 
 
@@ -570,36 +574,89 @@ def get_features(data,generate,data_name):
     # unit test for part of speech
     if generate:
         pos_dict=part_of_speech(data)
+        file=data_name+"_part_of_speech.json"
+        write_dict_to_json(pos_dict,file)
+    else:
+        file = data_name + "_part_of_speech.json"
+        pos_dict=read_dict_from_json(file)
+        
     print("2. POS Tagging done")
     print(f'Len of pos ={len(pos_dict)} x 3')
 
 
 
     # unit test for prounciation
-    pronounce_dict= pronunciations(data)
+    if generate:
+        pronounce_dict=pronunciations(data)
+        file=data_name+"_pronounciation.json"
+        write_dict_to_json(pos_dict,file)
+    else:
+        file = data_name + "_pronounciation.json"
+        pronounce_dict=read_dict_from_json(file)
+    
     print("3. Pronounciation done")
     print(len(pronounce_dict))
 
 
     # unit test for capitalization
-    caps=capitalization(data)
+    if generate:
+        caps=capitalization(data)
+        file=data_name+"_capitalization.json"
+        write_dict_to_json(pos_dict,file)
+    else:
+        file = data_name + "_capitalization.json"
+        caps=read_dict_from_json(file)
+    
     print("4. CAPS done")
     print(len(caps))
-
-    sent_senti=tweet_whole_sentiment(data)
+    
+ 
+    if generate:
+        sent_senti=tweet_whole_sentiment(data)
+        file=data_name+"_tweet_whole_sentiment.json"
+        write_dict_to_json(pos_dict,file)
+    else:
+        file = data_name + "_tweet_whole_sentiment.json"
+        sent_senti=read_dict_from_json(file)
+    
     print("5.Sentence Sentiment done")
     print(len(sent_senti))
 
-    word_senti=tweet_word_sentiment(data)
+    
+    if generate:
+        word_senti=tweet_word_sentiment(data)
+        file=data_name+"_word_sentiment.json"
+        write_dict_to_json(pos_dict,file)
+    else:
+        file = data_name + "_word_sentiment.json"
+        word_senti=read_dict_from_json(file)
     print("6. Words sentiment done")
     print(len(word_senti))
 
-    unigram_brown_feature, bigram_brown_feature = brown_cluster_ngrams(data)
+    
+    if generate:
+        unigram_brown_feature, bigram_brown_feature = extract_ngrams(data)
+        file=data_name+"_unigram_brown_feature.json"
+        write_dict_to_json(unigram_brown_feature,file)
+        file = data_name + "_bigram_brown_feature.json"
+        write_dict_to_json(bigram_brown_feature,file)
+    else:
+        file = data_name + "_unigram_brown_feature.json"
+        unigram_brown_feature=read_dict_from_json(file)
+        file = data_name + "_bigram_brown_feature.json"
+        bigram_brown_feature=read_dict_from_json(file)
     print("7.After Brown")
     print(f'Size of brown unigram={len(unigram_brown_feature)} x {len(unigram_brown_feature[1])}')
     print(f'Size of brown bigram={len(bigram_brown_feature)} x {len(bigram_brown_feature[1])}')
 
-    emoji_senti=emoji_senti_eval(data)
+    
+    if generate:
+        emoji_senti=emoji_senti_eval(data)(data)
+        file=data_name+"_emoji_sentiment.json"
+        write_dict_to_json(pos_dict,file)
+    else:
+        file = data_name + "_emoji_sentiment.json"
+        emoji_senti=read_dict_from_json(file)
     print("8. After emoji senti eval")
     print(len(emoji_senti))
 
@@ -607,38 +664,38 @@ def get_features(data,generate,data_name):
     
     
     Vectors=[]
-    for t in data:
-        vec=[]
-        vec.extend(unigram_feature.get(t.tweet_id))
-        vec.extend(bigram_feature.get(t.tweet_id))
+#     for t in data:
+#         vec=[]
+#         vec.extend(unigram_feature.get(t.tweet_id))
+#         vec.extend(bigram_feature.get(t.tweet_id))
 
-        vec.extend(pos_dict[t.tweet_id]['tweet_tag_cnt'])
-        vec.extend(pos_dict[t.tweet_id]['tweet_tag_ratio'])
-        vec.append(pos_dict[t.tweet_id]['tweet_lexical_density'])
+#         vec.extend(pos_dict[t.tweet_id]['tweet_tag_cnt'])
+#         vec.extend(pos_dict[t.tweet_id]['tweet_tag_ratio'])
+#         vec.append(pos_dict[t.tweet_id]['tweet_lexical_density'])
 
-        vec.append(pronounce_dict[t.tweet_id]['tweet_no_vowel_cnt'])
-        vec.append(pronounce_dict[t.tweet_id]['tweet_three_more_syllables_cnt'])
+#         vec.append(pronounce_dict[t.tweet_id]['tweet_no_vowel_cnt'])
+#         vec.append(pronounce_dict[t.tweet_id]['tweet_three_more_syllables_cnt'])
 
-        vec.append(caps[t.tweet_id]['tweet_initial_cap_cnt'])
-        vec.append(caps[t.tweet_id]['tweet_all_cap_cnt'])
-        vec.append(caps[t.tweet_id]['tweet_tag_cap_cnt'])
+#         vec.append(caps[t.tweet_id]['tweet_initial_cap_cnt'])
+#         vec.append(caps[t.tweet_id]['tweet_all_cap_cnt'])
+#         vec.append(caps[t.tweet_id]['tweet_tag_cap_cnt'])
 
-        vec.append(sent_senti[t.tweet_id])
+#         vec.append(sent_senti[t.tweet_id])
 
-        vec.append(word_senti[t.tweet_id]['max'])
-        vec.append(word_senti[t.tweet_id]['min'])
-        vec.append(word_senti[t.tweet_id]['distance'])
-
-
-        vec.extend(unigram_brown_feature[t.tweet_id])
-        vec.extend(bigram_brown_feature[t.tweet_id])
-
-        vec.extend(emoji_senti[t.tweet_id])
-
-        Vectors.append(vec)
+#         vec.append(word_senti[t.tweet_id]['max'])
+#         vec.append(word_senti[t.tweet_id]['min'])
+#         vec.append(word_senti[t.tweet_id]['distance'])
 
 
-    print(len(Vectors),len(Vectors[0]))
+#         vec.extend(unigram_brown_feature[t.tweet_id])
+#         vec.extend(bigram_brown_feature[t.tweet_id])
+
+#         vec.extend(emoji_senti[t.tweet_id])
+
+#         Vectors.append(vec)
+
+
+#     print(len(Vectors),len(Vectors[0]))
     return Vectors
 
 
