@@ -14,13 +14,21 @@ def vectorize(ids,data_name,feature_list,path):
     for id in ids:
         vec=[]
         for feature in feature_list:
-            vec.extend(feature_dicts[feature][id])
+            vec.extend(feature_dicts[feature][str(id)])
                         
         vecs.append(vec)
     return vecs
 
 
 def get_hybrid_features(path):
+    fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
+    fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
+    fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
+    fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
+    fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
+    fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
+    
+    
     data_names=['train_A','test_A','train_B','test_B']
     feature_list=['_unigram_feature','_unigram_feature', '_part_of_speech','_pronounciation','_capitalization','_tweet_whole_sentiment',
                   '_word_sentiment','_unigram_brown_feature','_bigram_brown_feature','_emoji_sentiment']
@@ -43,10 +51,10 @@ def get_hybrid_features(path):
     tst_A_ids = [t.tweet_id for t in test_A]
     tst_B_ids = [t.tweet_id for t in test_B]
     
-    feats_tr_A=vectorize(tr_A_ids,'train_A',path)
-    feats_tr_B = vectorize(tr_B_ids,'train_B',path)
-    feats_tst_A = vectorize(tst_A_ids,'test_A',path)
-    feats_tst_B = vectorize(tst_B_ids,'test_B',path)
+    feats_tr_A=vectorize(tr_A_ids,'train_A',feature_list,path)
+    feats_tr_B = vectorize(tr_B_ids,'train_B',feature_list,path)
+    feats_tst_A = vectorize(tst_A_ids,'test_A',feature_list,path)
+    feats_tst_B = vectorize(tst_B_ids,'test_B',feature_list,path)
         
     print(len(feats_tr_A), len(feats_tr_A[1]))
     print(len(feats_tst_A), len(feats_tst_A[1]))
