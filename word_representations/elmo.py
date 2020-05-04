@@ -174,6 +174,11 @@ def get_elmo_features(generate):
     feats_tst_A=vectorize(test_A_elmo)
     feats_tst_B=vectorize(test_B_elmo)
 
+    print(len(feats_tr_A) , len(feats_tr_A[1]))
+    print(len(feats_tst_A), len(feats_tst_A[1]))
+    print(len(feats_tr_B), len(feats_tr_B[1]))
+    print(len(feats_tst_B), len(feats_tst_B[1]))
+
     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
 
