@@ -1,9 +1,10 @@
 from utils import *
 
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.ensemble import GradientBoostingClassifier,RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from utils import read_dict_from_json
+import matplotlib.pyplot as plt
 import os
 
 
@@ -89,18 +90,24 @@ if __name__ == '__main__':
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B =get_hybrid_features(path)
     
     model1 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
-#     model2 = GradientBoostingClassifier()
+    model2 = RandomForestClassifier()
     
     # task A
     print("==============TASK A======================")
     fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
                    model=model1)
-    #fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
-                   #model=model2)
+    fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
+                   model=model2)
+    print(model2.feature_importances_)
+    plt.hist(model2.feature_importances_)
+    plt.show()
 
     # task B
     print("==============TASK B======================")
     fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
                    model=model1)
-#     fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
-#                    model=model2)
+    fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
+                   model=model2)
+    print(model2.feature_importances_)
+    plt.hist(model2.feature_importances_)
+    plt.show()
