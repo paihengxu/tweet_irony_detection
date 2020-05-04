@@ -126,7 +126,7 @@ def vectorize(feture_dict):
         vec=[]
         f=feture_dict.get(k)
         vec.extend(f.get('context_independent_layer'))
-        vec.extend(f.get('LSTM_layer1'))
+        # vec.extend(f.get('LSTM_layer1'))
         vec.extend(f.get('LSTM_layer2'))
         vecs.append(vec)
     return vecs
@@ -210,11 +210,13 @@ if __name__ == '__main__':
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B=get_elmo_features(generate)
 
     # task A
+    print("==============TASK A======================")
     model = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
     fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
                    model=model)
 
     # task B
+    print("==============TASK B======================")
     model2 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
     fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
                    model=model2)
