@@ -216,7 +216,7 @@ def capitalization(data):
 #                 'tweet_all_cap_cnt' : tweet_all_cap_cnt,
 #                 'tweet_tag_cap_cnt' : tweet_tag_cap_cnt
 #             }
-            feature_dict[tweet.tweet_id]=[tweet_initial_cap_cnt,weet_all_cap_cnt,tweet_tag_cap_cnt]
+            feature_dict[tweet.tweet_id]=[tweet_initial_cap_cnt,tweet_all_cap_cnt,tweet_tag_cap_cnt]
         # print(feature_dict)
         return feature_dict
 
