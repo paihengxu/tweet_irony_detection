@@ -22,9 +22,6 @@ from utils import get_label
 from utils import print_class_stats
 from utils import read_vocabulary, write_tokens_to_txt
 
-# word embedding libraries
-from allennlp.commands.elmo import ElmoEmbedder
-import sister
 
 # Define constant here
 MIN_FREQ = 3
@@ -794,111 +791,6 @@ def get_features(data):
     print(len(Vectors),len(Vectors[0]))
     return Vectors
 
-
-### Word Embeddings Start Here
-
-def elmo_embedding(data):
-    '''
-    Get elmo word embeddings and convert into feature
-    # Parameters
-    data : (Tweet : namedTuple) list
-
-    # Return
-    dict : 
-        tweet_id : int -> {
-            'context_independent_layer' : [context_independent_layer_min, context_independent_layer_max, context_independent_layer_mean] (3072 x 1),
-            'LSTM_layer1' : [LSTM_layer1_min, LSTM_layer1_max, LSTM_layer1_mean] (3072 x 1),
-            'LSTM_layer2' : [LSTM_layer2_min, LSTM_layer2_max, LSTM_layer2_mean] (3072 x 1)
-        }
-    
-    '''
-    feature_dict = {}
-    try:
-        elmo = ElmoEmbedder(
-            options_file='https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json', 
-            weight_file='https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_weights.hdf5'
-            )
-        for tweet in data:
-
-            # tokenize and tag tweet
-            tokenized = tweet.tweet_words()
-            vectors = elmo.embed_sentence(tokenized)
-            
-            assert(len(vectors) == 3)
-            assert(len(vectors[0]) == len(tokenized))
-            
-            context_independent_layer = vectors[0]
-            LSTM_layer1 = vectors[1]
-            LSTM_layer2 = vectors[2]
-            
-            # One simple technique that seems to work reasonably well for short texts (e.g., a sentence or a tweet) is to compute 
-            # the vector for each word in the document, and then aggregate them using the coordinate-wise mean, min, or max.
-            # 
-            # Reference:
-            # 
-            # Representation learning for very short texts using weighted word embedding aggregation. Cedric De Boom, Steven Van Canneyt, 
-            # Thomas Demeester, Bart Dhoedt. Pattern Recognition Letters; arxiv:1607.00570. abstract, pdf. See especially Tables 1 and 2.
-            
-            context_independent_layer_min = context_independent_layer.min(axis=0)
-            context_independent_layer_max = context_independent_layer.max(axis=0)
-            context_independent_layer_mean = context_independent_layer.mean(axis=0)
-            
-            LSTM_layer1_min = LSTM_layer1.min(axis=0)
-            LSTM_layer1_max = LSTM_layer1.max(axis=0)
-            LSTM_layer1_mean = LSTM_layer1.mean(axis=0)
-            
-            LSTM_layer2_min = LSTM_layer2.min(axis=0)
-            LSTM_layer2_max = LSTM_layer2.max(axis=0)
-            LSTM_layer2_mean = LSTM_layer2.mean(axis=0)
-            
-            feature_dict[tweet.tweet_id] = {
-                'context_independent_layer' : np.concatenate([context_independent_layer_min, context_independent_layer_max, context_independent_layer_mean]),
-                'LSTM_layer1' : np.concatenate([LSTM_layer1_min, LSTM_layer1_max, LSTM_layer1_mean]),
-                'LSTM_layer2' : np.concatenate([LSTM_layer2_min, LSTM_layer2_max, LSTM_layer2_mean])
-            }
-            
-        return feature_dict
-
-    except Exception as e:
-        print("In ELMO exceptions")
-        print(str(e))
-        
-def fast_text_embedding(data):
-    '''
-    Get skipgram word embeddings and convert into feature
-    # Parameters
-    data : (Tweet : namedTuple) list
-
-    # Return
-    dict : 
-        tweet_id : int -> {
-            'tweet_tag_cnt' -> nparray : [45 x 1 vector in which each index represent the count of each tag in tagset],
-            'tweet_tag_ratio' -> nparray : [45 x 1 vector in which each index represent the ratio of each tag in tagset],
-            'tweet_lexical_density' -> float : tweet lexical density
-        }
-    
-    '''
-    feature_dict = {}
-    try:
-        
-        for tweet in data:
-
-            # tokenize and tag tweet
-            tokenized = tweet.tweet_words()
-            
-            embedder = sister.MeanEmbedding(lang="en")
-            
-            vector = embedder(' '.join(tokenized))
-            
-            feature_dict[tweet.tweet_id] = {
-                'embedding' : vector
-            }
-            
-        return feature_dict
-
-    except Exception as e:
-        print("In ELMO exceptions")
-        print(str(e))
 
 def save_features(vectors,fn):
     #input vectors: feature vectors, fn:filename
