@@ -86,11 +86,12 @@ def part_of_speech(data):
             # compute lexical density: the number of unique tokens divided by the total number of words.
             tweet_lexical_density = len(set(tokenized))/len(tokenized)
 
-            feature_dict[tweet.tweet_id] = {
-                'tweet_tag_cnt' : tweet_tag_cnt_vec,
-                'tweet_tag_ratio' : tweet_tag_ratio_vec,
-                'tweet_lexical_density' : tweet_lexical_density
-            }
+#             feature_dict[tweet.tweet_id] = {
+#                 'tweet_tag_cnt' : tweet_tag_cnt_vec,
+#                 'tweet_tag_ratio' : tweet_tag_ratio_vec,
+#                 'tweet_lexical_density' : tweet_lexical_density
+#             }
+            feature_dict[tweet.tweet_id]=[tweet_tag_cnt_vec,tweet_tag_ratio_vec,tweet_lexical_density]
 
         # print(feature_dict)
         return feature_dict
@@ -544,10 +545,7 @@ def emoji_senti_eval(data):
 
 
 
-
-   
-
-
+    
 
 def get_features(data,generate,data_name):
     # unit test for ngrams
@@ -562,15 +560,14 @@ def get_features(data,generate,data_name):
         unigram_feature=read_dict_from_json(file)
         file = data_name + "_bigram_feature.json"
         bigram_feature=read_dict_from_json(file)
-
-
     print("1. Ngrams generated")
     print(f'Size of unigram={len(unigram_feature)} x {len(unigram_feature[1])}')
     print(f'Size of bigram={len(bigram_feature)} x {len(bigram_feature[1])}')
 
-
+    
     # unit test for part of speech
-    pos_dict=part_of_speech(data)
+    if generate:
+        pos_dict=part_of_speech(data)
     print("2. POS Tagging done")
     print(f'Len of pos ={len(pos_dict)} x 3')
 
@@ -705,7 +702,10 @@ def featurize(generate):
     feats_tst_A = get_features(test_A,generate,'test_A')
     feats_tr_B=get_features(train_B,generate,'train_B') # Same as A's features
     feats_tst_B=get_features(test_B,generate,'test_B') # Same as A's features
-
+    
+    
+    
+    
 
     # save_features(feats_tr_A,"feats_tr_A.csv")
     # save_features(feats_tst_A,"feats_tst_A.csv")
