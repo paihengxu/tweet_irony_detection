@@ -124,16 +124,16 @@ def fit_test_model(train, train_label, test, test_label, model):
     y_pred = model.predict(test)
     score_ = model.score(test, test_label)
     conf_m = confusion_matrix(test_label, y_pred)
-    report = classification_report(test_label, y_pred)
+    report = classification_report(test_label, y_pred,output_dict=True)
 
-    print('score_:', score_, end='\n\n')
-    print('conf_m:', conf_m, sep='\n', end='\n\n')
-    print('report:', report, sep='\n')
+    # print('score_:', score_, end='\n\n')
+    # print('conf_m:', conf_m, sep='\n', end='\n\n')
+    # print('report:', report, sep='\n')
 
 
 
-    # print(f"Accuracy={report['accuracy']:.4},Precision={report['weighted avg']['precision']:.4}," \
-    #       f"Recall={report['weighted avg']['recall']:.4},f1-score={report['weighted avg']['f1-score']:.4}")
+    print(f"Accuracy={report['accuracy']:.4},Precision={report['weighted avg']['precision']:.4}," \
+          f"Recall={report['weighted avg']['recall']:.4},f1-score={report['weighted avg']['f1-score']:.4}")
 
 if __name__ == '__main__':
     ### generate feature files for all dataset
