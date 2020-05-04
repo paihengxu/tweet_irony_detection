@@ -7,7 +7,6 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 def vectorize(ids,bert_dict,elmo_dict):
     vecs=[]
-    print(type(bert_dict.get(1)))
     for id in ids:
         vec=[]
         # Append bert
@@ -72,6 +71,14 @@ def get_hybrid_features():
     test_A_elmo = read_dict_from_json('test_A_elmo.json.gz')
     test_B_elmo = read_dict_from_json('test_B_elmo.json.gz')
 
+
+    # train_A_ = read_dict_from_json('train_A_.json.gz')
+    # train_B_ = read_dict_from_json('train_B_.json.gz')
+    # test_A_ = read_dict_from_json('test_A_.json.gz')
+    # test_B_ = read_dict_from_json('test_B_.json.gz')
+
+
+
     feats_tr_A=vectorize(tr_A_ids,train_A_bert,train_A_elmo)
     feats_tr_B = vectorize(tr_B_ids,train_B_bert,train_B_elmo)
     feats_tst_A = vectorize(tst_A_ids,test_A_bert,test_A_elmo)
@@ -93,11 +100,14 @@ def fit_test_model(train, train_label, test, test_label, model):
     y_pred = model.predict(test)
     score_ = model.score(test, test_label)
     conf_m = confusion_matrix(test_label, y_pred)
-    report = classification_report(test_label, y_pred)
+    report = classification_report(test_label, y_pred,output_dict=True)
 
-    print('score_:', score_, end='\n\n')
-    print('conf_m:', conf_m, sep='\n', end='\n\n')
-    print('report:', report, sep='\n')
+    # print('score_:', score_, end='\n\n')
+    # print('conf_m:', conf_m, sep='\n', end='\n\n')
+    # print('report:', str(report), sep='\n')
+
+    print(f"Accuracy={report['accuracy']:.4},Precision={report['weighted avg']['precision']:.4}," \
+          f"Recall={report['weighted avg']['recall']:.4},f1-score={report['weighted avg']['f1-score']:.4}")
 
 if __name__ == '__main__':
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B =get_hybrid_features()
