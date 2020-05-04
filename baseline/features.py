@@ -553,14 +553,14 @@ def get_features(data,generate,data_name):
     # unit test for ngrams
     if generate:
         unigram_feature, bigram_feature = extract_ngrams(data)
-        file=data_name+"_unigram_feature"
+        file=data_name+"_unigram_feature.json"
         write_dict_to_json(unigram_feature,file)
-        file = data_name + "_bigram_feature"
+        file = data_name + "_bigram_feature.json"
         write_dict_to_json(bigram_feature,file)
     else:
-        file = data_name + "_unigram_feature"
+        file = data_name + "_unigram_feature.json"
         unigram_feature=read_dict_from_json(file)
-        file = data_name + "_bigram_feature"
+        file = data_name + "_bigram_feature.json"
         bigram_feature=read_dict_from_json(file)
 
 
