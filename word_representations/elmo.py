@@ -3,8 +3,7 @@ warnings.filterwarnings('ignore')
 
 import numpy as np
 
-from utils import read_non_emoji_tweets
-from utils import write_dict_to_json
+from utils import *
 
 # word embedding libraries
 from allennlp.commands.elmo import ElmoEmbedder
@@ -114,33 +113,60 @@ def elmo_embedding(data):
 #         print("In Fast Text Exceptions")
 #         print(str(e))
         
-  
-if __name__ == '__main__':
-    
+
+def get_elmo_features(generate):
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
     fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
     fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
-    
+    fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
+    fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
+
     pre_process_url = True  # Set to remove URLs
     pre_process_usr = True
     train_A = read_non_emoji_tweets(fp_train_A, "train", pre_process_url, pre_process_usr)
     train_B = read_non_emoji_tweets(fp_train_B, "train", pre_process_url, pre_process_usr)
-    
+    tr_labels_A = [t.tweet_label for t in train_A]
+    tr_label_B = [t.tweet_label for t in train_B]
+
     test_A = read_non_emoji_tweets(fp_test_A, "test", pre_process_url, pre_process_usr)
+    gold_A = get_label(fp_labels_A)
+    tst_labels_A = [v for k, v in gold_A.items()]
     test_B = read_non_emoji_tweets(fp_test_B, "test", pre_process_url, pre_process_usr)
+    gold_B = get_label(fp_labels_B)
+    tst_labels_B = [v for k, v in gold_B.items()]
+
+
+
+    if generate:
+
+        train_A_elmo = elmo_embedding(train_A)
+        write_dict_to_json(train_A_elmo, 'train_A_elmo.json')
+
+        train_B_elmo = elmo_embedding(train_B)
+        write_dict_to_json(train_B_elmo, 'train_B_elmo.json')
+
+        test_A_elmo = elmo_embedding(test_A)
+        write_dict_to_json(test_A_elmo, 'test_A_elmo.json')
+
+        test_B_elmo = elmo_embedding(test_B)
+        write_dict_to_json(test_B_elmo, 'test_B_elmo.json')
+
+
+    else:
+        train_A_elmo =read_dict_from_json('train_A_elmo.json')
+        train_B_elmo =read_dict_from_json('train_B_elmo.json')
+        test_A_elmo =read_dict_from_json('test_A_elmo.json')
+        test_B_elmo =read_dict_from_json('test_B_elmo.json')
+
+    return train_A_elmo, test_A_elmo, train_B_elmo, test_B_elmo, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
+
+
+
+if __name__ == '__main__':
+    generate=False;
+    get_elmo_features(generate)
     
-    train_A_elmo = elmo_embedding(train_A)
-    write_dict_to_json(train_A_elmo, 'train_A_elmo.json')
-    
-    train_B_elmo = elmo_embedding(train_B)
-    write_dict_to_json(train_B_elmo, 'train_B_elmo.json')
-    
-    test_A_elmo = elmo_embedding(test_A)
-    write_dict_to_json(test_A_elmo, 'test_A_elmo.json')
-    
-    test_B_elmo = elmo_embedding(test_B)
-    write_dict_to_json(test_B_elmo, 'test_B_elmo.json')
-    
+
     
     
