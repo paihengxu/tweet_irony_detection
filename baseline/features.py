@@ -209,11 +209,12 @@ def capitalization(data):
                 if tag.istitle() or tag.isupper():
                     tweet_tag_cap_cnt += 1
 
-            feature_dict[tweet.tweet_id] = {
-                'tweet_initial_cap_cnt' : tweet_initial_cap_cnt,
-                'tweet_all_cap_cnt' : tweet_all_cap_cnt,
-                'tweet_tag_cap_cnt' : tweet_tag_cap_cnt
-            }
+#             feature_dict[tweet.tweet_id] = {
+#                 'tweet_initial_cap_cnt' : tweet_initial_cap_cnt,
+#                 'tweet_all_cap_cnt' : tweet_all_cap_cnt,
+#                 'tweet_tag_cap_cnt' : tweet_tag_cap_cnt
+#             }
+            feature_dict[tweet.tweet_id]=[tweet_initial_cap_cnt,weet_all_cap_cnt,tweet_tag_cap_cnt]
         # print(feature_dict)
         return feature_dict
 
