@@ -84,7 +84,7 @@ if __name__ == '__main__':
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B =get_hybrid_features(path)
     
     model1 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
-    model2 = GradientBoostingClassifier()
+    model2 = GradientBoostingClassifier(n_estimators=500)
     
     # task A
     print("==============TASK A======================")
