@@ -1,14 +1,19 @@
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
 import numpy as np
+from utils import *
+# from utils import write_dict_to_json, read_dict_from_json
 
-from utils import read_non_emoji_tweets
-from utils import write_dict_to_json
+from sklearn.linear_model import LogisticRegression
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
 
 # word embedding libraries
 from allennlp.commands.elmo import ElmoEmbedder
-import sister
+# import sister
 
 
 def elmo_embedding(data):
@@ -114,33 +119,104 @@ def elmo_embedding(data):
 #         print("In Fast Text Exceptions")
 #         print(str(e))
         
-  
-if __name__ == '__main__':
-    
+def vectorize(feture_dict):
+    vecs=[]
+
+    for k in list(feture_dict.keys()):
+        vec=[]
+        f=feture_dict.get(k)
+        vec.extend(f.get('context_independent_layer'))
+        vec.extend(f.get('LSTM_layer1'))
+        vec.extend(f.get('LSTM_layer2'))
+        vecs.append(vec)
+    return vecs
+
+
+def fit_test_model(train, train_label, test, test_label, model):
+    model.fit(train, train_label)
+    # Predict
+    # p_pred = model.predict_proba(feats_tst_A)
+    # Metrics
+    y_pred = model.predict(test)
+    score_ = model.score(test, test_label)
+    conf_m = confusion_matrix(test_label, y_pred)
+    report = classification_report(test_label, y_pred)
+
+    print('score_:', score_, end='\n\n')
+    print('conf_m:', conf_m, sep='\n', end='\n\n')
+    print('report:', report, sep='\n')
+
+def get_elmo_features(generate):
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
     fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
     fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
-    
+    fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
+    fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
+
     pre_process_url = True  # Set to remove URLs
     pre_process_usr = True
     train_A = read_non_emoji_tweets(fp_train_A, "train", pre_process_url, pre_process_usr)
     train_B = read_non_emoji_tweets(fp_train_B, "train", pre_process_url, pre_process_usr)
-    
+    tr_labels_A = [t.tweet_label for t in train_A]
+    tr_label_B = [t.tweet_label for t in train_B]
+
     test_A = read_non_emoji_tweets(fp_test_A, "test", pre_process_url, pre_process_usr)
+    gold_A = get_label(fp_labels_A)
+    tst_labels_A = [v for k, v in gold_A.items()]
     test_B = read_non_emoji_tweets(fp_test_B, "test", pre_process_url, pre_process_usr)
-    
-    train_A_elmo = elmo_embedding(train_A)
-    write_dict_to_json(train_A_elmo, 'train_A_elmo.json')
-    
-    train_B_elmo = elmo_embedding(train_B)
-    write_dict_to_json(train_B_elmo, 'train_B_elmo.json')
-    
-    test_A_elmo = elmo_embedding(test_A)
-    write_dict_to_json(test_A_elmo, 'test_A_elmo.json')
-    
-    test_B_elmo = elmo_embedding(test_B)
-    write_dict_to_json(test_B_elmo, 'test_B_elmo.json')
-    
+    gold_B = get_label(fp_labels_B)
+    tst_labels_B = [v for k, v in gold_B.items()]
+
+
+
+    if generate:
+
+        train_A_elmo = elmo_embedding(train_A)
+        write_dict_to_json(train_A_elmo, 'train_A_elmo.json')
+
+        train_B_elmo = elmo_embedding(train_B)
+        write_dict_to_json(train_B_elmo, 'train_B_elmo.json')
+
+        test_A_elmo = elmo_embedding(test_A)
+        write_dict_to_json(test_A_elmo, 'test_A_elmo.json')
+
+        test_B_elmo = elmo_embedding(test_B)
+        write_dict_to_json(test_B_elmo, 'test_B_elmo.json')
+
+
+    else:
+        train_A_elmo =read_dict_from_json('train_A_elmo.json.gz')
+        train_B_elmo =read_dict_from_json('train_B_elmo.json.gz')
+        test_A_elmo =read_dict_from_json('test_A_elmo.json.gz')
+        test_B_elmo =read_dict_from_json('test_B_elmo.json.gz')
+
+    feats_tr_A=vectorize(train_A_elmo)
+    feats_tr_B=vectorize(train_B_elmo)
+    feats_tst_A=vectorize(test_A_elmo)
+    feats_tst_B=vectorize(test_B_elmo)
+
+    print(len(feats_tr_A) , len(feats_tr_A[1]))
+    print(len(feats_tst_A), len(feats_tst_A[1]))
+    print(len(feats_tr_B), len(feats_tr_B[1]))
+    print(len(feats_tst_B), len(feats_tst_B[1]))
+
+    return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
+
+
+
+if __name__ == '__main__':
+    generate=False;
+    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B=get_elmo_features(generate)
+
+    # task A
+    model = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
+    fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
+                   model=model)
+
+    # task B
+    model2 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
+    fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
+                   model=model2)
     
     
