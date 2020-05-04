@@ -3,7 +3,7 @@ warnings.filterwarnings('ignore')
 
 import numpy as np
 
-from utils import *
+from utils import write_dict_to_json,read_dict_from_json
 from sklearn.linear_model import LogisticRegression
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import classification_report, confusion_matrix
@@ -182,10 +182,10 @@ def get_elmo_features(generate):
 
 
     else:
-        train_A_elmo =read_dict_from_json('train_A_elmo.json')
-        train_B_elmo =read_dict_from_json('train_B_elmo.json')
-        test_A_elmo =read_dict_from_json('test_A_elmo.json')
-        test_B_elmo =read_dict_from_json('test_B_elmo.json')
+        train_A_elmo =read_dict_from_json('train_A_elmo.json.gz')
+        train_B_elmo =read_dict_from_json('train_B_elmo.json.gz')
+        test_A_elmo =read_dict_from_json('test_A_elmo.json.gz')
+        test_B_elmo =read_dict_from_json('test_B_elmo.json.gz')
 
     feats_tr_A=vectorize(train_A_elmo)
     feats_tr_B=vectorize(train_B_elmo)
