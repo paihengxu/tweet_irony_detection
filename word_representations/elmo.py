@@ -126,7 +126,7 @@ def vectorize(feture_dict):
         vec=[]
         f=feture_dict.get(k)
         vec.extend(f.get('context_independent_layer'))
-        # vec.extend(f.get('LSTM_layer1'))
+        vec.extend(f.get('LSTM_layer1'))
         vec.extend(f.get('LSTM_layer2'))
         vecs.append(vec)
     return vecs
