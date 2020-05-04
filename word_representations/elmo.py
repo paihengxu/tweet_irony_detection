@@ -1,9 +1,11 @@
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
 import numpy as np
+from utils import *
+# from utils import write_dict_to_json, read_dict_from_json
 
-from utils import write_dict_to_json,read_dict_from_json
 from sklearn.linear_model import LogisticRegression
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import classification_report, confusion_matrix
@@ -11,7 +13,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 
 # word embedding libraries
 from allennlp.commands.elmo import ElmoEmbedder
-import sister
+# import sister
 
 
 def elmo_embedding(data):
@@ -119,8 +121,10 @@ def elmo_embedding(data):
         
 def vectorize(feture_dict):
     vecs=[]
-    for f in feture_dict:
+
+    for k in list(feture_dict.keys()):
         vec=[]
+        f=feture_dict.get(k)
         vec.extend(f.get('context_independent_layer'))
         vec.extend(f.get('LSTM_layer1'))
         vec.extend(f.get('LSTM_layer2'))
