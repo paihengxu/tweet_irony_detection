@@ -653,7 +653,7 @@ def get_features(data,generate,data_name):
 
     
     if generate:
-        emoji_senti=emoji_senti_eval(data)(data)
+        emoji_senti=emoji_senti_eval(data)
         file=data_name+"_emoji_sentiment.json"
         write_dict_to_json(pos_dict,file)
     else:
