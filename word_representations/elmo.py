@@ -113,6 +113,16 @@ def elmo_embedding(data):
 #         print("In Fast Text Exceptions")
 #         print(str(e))
         
+def vectorize(feture_dict):
+    vecs=[]
+    for f in feture_dict:
+        vec=[]
+        vec.extend(f.get('context_independent_layer'))
+        vec.extend(f.get('LSTM_layer1'))
+        vec.extend(f.get('LSTM_layer2'))
+        vecs.append(vec)
+    return vecs
+
 
 def get_elmo_features(generate):
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
@@ -159,7 +169,12 @@ def get_elmo_features(generate):
         test_A_elmo =read_dict_from_json('test_A_elmo.json')
         test_B_elmo =read_dict_from_json('test_B_elmo.json')
 
-    return train_A_elmo, test_A_elmo, train_B_elmo, test_B_elmo, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
+    feats_tr_A=vectorize(train_A_elmo)
+    feats_tr_B=vectorize(train_B_elmo)
+    feats_tst_A=vectorize(test_A_elmo)
+    feats_tst_B=vectorize(test_B_elmo)
+
+    return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
 
 
