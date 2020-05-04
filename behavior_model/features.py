@@ -219,9 +219,9 @@ if __name__ == '__main__':
     for name, dataset in name_2_dataset.items():
         feature_2 = twitter_sentiment_score(dataset, 2)
         feature_3 = twitter_sentiment_score(dataset, 3)        
-        # word_aff=word_affect(dataset)
-        # read=readability(dataset)
-        # pros=prosodic(dataset)
+        word_aff=word_affect(dataset)
+        read=readability(dataset)
+        pros=prosodic(dataset)
                 
 
         write_dict_to_json(feature_2, fn='{dataset}_{feature_name}.json'.format(dataset=name,
