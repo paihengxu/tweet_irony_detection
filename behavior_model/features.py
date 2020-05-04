@@ -27,6 +27,7 @@ def twitter_sentiment_score(corpus, n):
     neg_vocab = read_vocabulary_with_occurrence('behavior_model/negative_{}_vocab.txt'.format(n), n)
 
     senti_features = defaultdict(float)
+    num_senti_features = defaultdict(int)
     for data in corpus:
         tokens = data.tweet_words()
         lower_tokens = [t.lower() for t in tokens]
@@ -50,14 +51,16 @@ def twitter_sentiment_score(corpus, n):
                 continue
 
             senti_features[_id] += senti_score
+            num_senti_features[_id] += 1
 
         # assign 0 to empty score tweets
         if _id not in senti_features:
             senti_features[_id] = 0.
+            num_senti_features[_id] = 0
 
     list_senti_features = {}
     for k, v in senti_features.items():
-        list_senti_features[k] = [v]
+        list_senti_features[k] = [v, num_senti_features[k]]
 
     return list_senti_features
 
