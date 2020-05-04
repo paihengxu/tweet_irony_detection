@@ -39,7 +39,7 @@ def elmo_embedding(data):
         
         N = len(data)
         
-        for i in range(N):
+        for i in range(3):
             tweet = data[i]
 
             # tokenize and tag tweet
@@ -73,7 +73,7 @@ def elmo_embedding(data):
             LSTM_layer2_max = LSTM_layer2.max(axis=0)
             LSTM_layer2_mean = LSTM_layer2.mean(axis=0)
 
-            print('{}/{} tweets embedded'.format(i, N))
+            print('{}/{} tweets embedded'.format(i + 1, N))
 
             feature_dict[tweet.tweet_id] = {
                 'context_independent_layer' : np.concatenate([context_independent_layer_min, context_independent_layer_max, context_independent_layer_mean]),
