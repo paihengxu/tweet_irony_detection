@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report, confusion_matrix
 
 
-
+# def vectorize(ids,data_name,feature_list,path):
 def vectorize(ids,bert_dict,elmo_dict):
     vecs=[]
     for id in ids:
@@ -15,9 +15,10 @@ def vectorize(ids,bert_dict,elmo_dict):
 
         # Append elmo
         el = elmo_dict.get(str(id))
-        vec.extend(el.get('context_independent_layer'))
-        vec.extend(el.get('LSTM_layer1'))
+        # vec.extend(el.get('context_independent_layer'))
+        # vec.extend(el.get('LSTM_layer1'))
         vec.extend(el.get('LSTM_layer2'))
+
 
         vecs.append(vec)
     return vecs
@@ -71,18 +72,13 @@ def get_hybrid_features():
     test_A_elmo = read_dict_from_json('test_A_elmo.json.gz')
     test_B_elmo = read_dict_from_json('test_B_elmo.json.gz')
 
-
-    # train_A_ = read_dict_from_json('train_A_.json.gz')
-    # train_B_ = read_dict_from_json('train_B_.json.gz')
-    # test_A_ = read_dict_from_json('test_A_.json.gz')
-    # test_B_ = read_dict_from_json('test_B_.json.gz')
-
-
-
-    feats_tr_A=vectorize(tr_A_ids,train_A_bert,train_A_elmo)
-    feats_tr_B = vectorize(tr_B_ids,train_B_bert,train_B_elmo)
+    feats_tr_A = vectorize(tr_A_ids, train_A_bert, train_A_elmo)
+    feats_tr_B = vectorize(tr_B_ids, train_B_bert, train_B_elmo)
     feats_tst_A = vectorize(tst_A_ids,test_A_bert,test_A_elmo)
     feats_tst_B = vectorize(tst_B_ids,test_B_bert,test_B_elmo)
+
+
+
 
     print(len(feats_tr_A), len(feats_tr_A[1]))
     print(len(feats_tst_A), len(feats_tst_A[1]))
@@ -92,7 +88,7 @@ def get_hybrid_features():
     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
 
-def fit_test_model(train, train_label, test, test_label, model):
+def fit_test_model(train, train_label, test, test_label, model,task):
     model.fit(train, train_label)
     # Predict
     # p_pred = model.predict_proba(feats_tst_A)
@@ -106,20 +102,20 @@ def fit_test_model(train, train_label, test, test_label, model):
     # print('conf_m:', conf_m, sep='\n', end='\n\n')
     # print('report:', str(report), sep='\n')
 
-    print(f"Accuracy={report['accuracy']:.4},Precision={report['weighted avg']['precision']:.4}," \
-          f"Recall={report['weighted avg']['recall']:.4},f1-score={report['weighted avg']['f1-score']:.4}")
+    print(f"{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",sep='\t')
 
 if __name__ == '__main__':
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B =get_hybrid_features()
+    print(f'Task, Accuracy, Precision, Recall,F1-Score', sep='\t')
 
+    C_param_range = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    for c in C_param_range:
     # task A
-    print("==============TASK A======================")
-    model = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
-    fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
-                   model=model)
+
+        model = LogisticRegression(solver='liblinear', penalty='l2',C=c, random_state=0)
+        fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A, model=model,task="Task A")
 
     # task B
-    print("==============TASK B======================")
-    model2 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
-    fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
-                   model=model2)
+
+        model2 = LogisticRegression(solver='liblinear', penalty='l2',C=c, random_state=0)
+        fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,model=model2,task="Task B")
