@@ -4,6 +4,10 @@ warnings.filterwarnings('ignore')
 import numpy as np
 
 from utils import *
+from sklearn.linear_model import LogisticRegression
+from sklearn.dummy import DummyClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
 
 # word embedding libraries
 from allennlp.commands.elmo import ElmoEmbedder
@@ -124,6 +128,20 @@ def vectorize(feture_dict):
     return vecs
 
 
+def fit_test_model(train, train_label, test, test_label, model):
+    model.fit(train, train_label)
+    # Predict
+    # p_pred = model.predict_proba(feats_tst_A)
+    # Metrics
+    y_pred = model.predict(test)
+    score_ = model.score(test, test_label)
+    conf_m = confusion_matrix(test_label, y_pred)
+    report = classification_report(test_label, y_pred)
+
+    print('score_:', score_, end='\n\n')
+    print('conf_m:', conf_m, sep='\n', end='\n\n')
+    print('report:', report, sep='\n')
+
 def get_elmo_features(generate):
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
@@ -185,8 +203,16 @@ def get_elmo_features(generate):
 
 if __name__ == '__main__':
     generate=False;
-    get_elmo_features(generate)
-    
+    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B=get_elmo_features(generate)
 
+    # task A
+    model = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
+    fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
+                   model=model)
+
+    # task B
+    model2 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
+    fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
+                   model=model2)
     
     
