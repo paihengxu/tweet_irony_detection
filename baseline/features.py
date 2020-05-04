@@ -274,8 +274,8 @@ def extract_ngrams(corpus):
         lower_tokens = [t.lower() for t in tokens]
         _id = data.tweet_id
         # +1 for OOV
-        unigram_dict[_id] = np.zeros(len(unigram_vocab) + 1)
-        bigram_dict[_id] = np.zeros(len(bigram_vocab) + 1)
+        unigram_dict[_id] = np.zeros(len(unigram_vocab) + 1).tolist()
+        bigram_dict[_id] = np.zeros(len(bigram_vocab) + 1).tolist()
         for idx, ele in enumerate(lower_tokens):
             # unigram
             unigram_dict[_id][unigram_vocab.get(ele, len(unigram_vocab))] = 1.
@@ -549,18 +549,18 @@ def emoji_senti_eval(data):
 
 
 
-def get_features(data,generate):
+def get_features(data,generate,data_name):
     # unit test for ngrams
     if generate:
         unigram_feature, bigram_feature = extract_ngrams(data)
-        file=data+"unigram_feature"
+        file=data_name+"_unigram_feature.json"
         write_dict_to_json(unigram_feature,file)
-        file = data + "bigram_feature"
+        file = data_name + "_bigram_feature.json"
         write_dict_to_json(bigram_feature,file)
     else:
-        file = data + "unigram_feature"
+        file = data_name + "_unigram_feature.json"
         unigram_feature=read_dict_from_json(file)
-        file = data + "bigram_feature"
+        file = data_name + "_bigram_feature.json"
         bigram_feature=read_dict_from_json(file)
 
 
@@ -701,10 +701,10 @@ def featurize(generate):
     #     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
     # Generate features
-    feats_tr_A = get_features(train_A,generate)
-    feats_tst_A = get_features(test_A,generate)
-    feats_tr_B=get_features(train_B,generate) # Same as A's features
-    feats_tst_B=get_features(test_B,generate) # Same as A's features
+    feats_tr_A = get_features(train_A,generate,'train_A')
+    feats_tst_A = get_features(test_A,generate,'test_A')
+    feats_tr_B=get_features(train_B,generate,'train_B') # Same as A's features
+    feats_tst_B=get_features(test_B,generate,'test_B') # Same as A's features
 
 
     # save_features(feats_tr_A,"feats_tr_A.csv")
