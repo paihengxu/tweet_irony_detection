@@ -224,15 +224,15 @@ if __name__ == '__main__':
         # pros=prosodic(dataset)
                 
 
-        write_dict_to_json(feature_2, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
+        write_dict_to_json(feature_2, fn='{dataset}_{feature_name}.json'.format(dataset=name,
                                                                                    feature_name='senti_bigram'))
 
-        write_dict_to_json(feature_3, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
+        write_dict_to_json(feature_3, fn='{dataset}_{feature_name}.json'.format(dataset=name,
                                                                                    feature_name='senti_trigram'))
 
-#         write_dict_to_json(word_aff, fn='.\features\dataset\{dataset}_{feature_name}.json.gz'.format(dataset=name,
-#                                                                                    feature_name='word_affect'))
-#         write_dict_to_json(read, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
-#                                                                                    feature_name='readability'))
-#         write_dict_to_json(pros, fn='{dataset}_{feature_name}.json.gz'.format(dataset=name,
-#                                                                                    feature_name='prosodic'))
+        write_dict_to_json(word_aff, fn='{dataset}_{feature_name}.json'.format(dataset=name,
+                                                                                   feature_name='word_affect'))
+        write_dict_to_json(read, fn='{dataset}_{feature_name}.json'.format(dataset=name,
+                                                                                   feature_name='readability'))
+        write_dict_to_json(pros, fn='{dataset}_{feature_name}.json'.format(dataset=name,
+                                                                                   feature_name='prosodic'))
