@@ -544,133 +544,8 @@ def emoji_senti_eval(data):
 
 
 
-####
-### Behavior Approach 
-###
-def word_affect(data):
-    '''
-    input: whole corpus
-    output: 1 dicts for affect of word, 
-            keys: tweet_id, values: dict (keys={"vmax","vmin","vdistance","amax","amin","adistance","dmax","dmin","ddistance"})
-    '''
-    feature_dict={}
-    try:
-        df=pd.read_csv('BRM-emot-submit.csv',index_col=0)
-        Words=set(df['Word'].values.tolist())
-        keys=['V.Mean.Sum','A.Mean.Sum','D.Mean.Sum']
-        for tweet in data:
-            tokenized= tweet.tweet_words()
-            new_words= [word for word in tokenized if word in Words]
-            if not new_words:
-                feature_dict[tweet.tweet_id]={
-                "vmax":0,"vmin":0,"vdistance":0,
-                 "amax":0,"amin":0,"adistance":0,
-                "dmax":0,"dmin":0,"ddistance":0}
-                continue
-            vmax_,vmin_ = -1,10
-            amax_,amin_ = -1,10
-            dmax_,dmin_ = -1,10
-            for word in new_words:
-                df_selected = df[df['Word']==word]
-#                 print(df_selected)
-#                 return
-                
-                idx=df_selected.index[0]
-                vmax_=max(vmax_,df_selected['V.Mean.Sum'][idx])
-                vmin_=min(vmin_,df_selected['V.Mean.Sum'][idx])
-                amax_=max(amax_,df_selected['A.Mean.Sum'][idx])
-                amin_=min(amin_,df_selected['A.Mean.Sum'][idx])
-                dmax_=max(dmax_,df_selected['D.Mean.Sum'][idx])
-                dmin_=min(dmin_,df_selected['D.Mean.Sum'][idx])
-            
-            vmax_=0 if vmax_==-1 else vmax_
-            vmin_=0 if vmin_==10 else vmin_
-            amax_=0 if amax_==-1 else amax_
-            amin_=0 if amin_==10 else amin_
-            dmax_=0 if dmax_==-1 else dmax_
-            dmin_=0 if dmin_==10 else dmin_
-            feature_dict[tweet.tweet_id]={
-                "vmax": vmax_,"vmin": vmin_,"vdistance":vmax_-vmin_,
-                 "amax":amax_,"amin":amin_,"adistance":amax_-amin_,
-                "dmax":dmax_,"dmin":dmin_,"ddistance":dmax_-dmin_}
-        return feature_dict
 
-    except Exception as e:
-        print("In word affect")
-        print(str(e))
-    
-def readability(data):
-    '''
-    input: whole corpus
-    output: 1 dicts for readability, 
-            keys: tweet_id, values: dict (keys={"mean","median","mode","sigma","min","max"})
-    '''
-    feature_dict={}
-    try:
-        for tweet in data:
-            tokenized= tweet.tweet_words()
-            new_words= [word for word in tokenized]
-            l=[]
-            for word in new_words:
-                length=len(word)
-                if length<20:
-                    l.append(length)
-            if not l:
-                feature_dict[tweet.tweet_id]={"mean":0, "median":0,"mode":0,"sigma":0,"min":0,"max":0}
-            else:
-                arr_l=np.array(l)
-                feature_dict[tweet.tweet_id]={"mean":np.mean(arr_l), "median":np.median(arr_l),"mode":stats.mode(arr_l)[0],"sigma":np.std(arr_l),"min":arr_l.min(),"max":arr_l.max()}
-        return feature_dict
-
-    except Exception as e:
-        print("In readability")
-        print(str(e))
-    
-
-
-def prosodic(data):
-    '''
-    input: whole corpus
-    output: 1 dicts for prosodic variations, 
-            keys: tweet_id, values: dict (keys={"repeat","total_character","ratio"})
-    '''
-    feature_dict={}
-    try:
-        for tweet in data:
-            tokenized= tweet.tweet_words()
-            new_words= [word for word in tokenized]
-            total_character=0
-            curr_charactor=None
-            curr_repeat=0
-            distinct_character=0
-            visited_character=set()
-            
-            presence_of_repeat=False
-            
-            for word in new_words:
-                for c in word:
-                    total_character+=1
-                    visited_character.add(c)
-                    if not curr_charactor==c:
-                        curr_charactor=c
-                        curr_repeat=1
-                    else:
-                        curr_repeat+=1
-                    if curr_repeat>=3:
-                        presence_of_repeat=True
-            ratio=len(visited_character)/total_character if total_character else 0
-            feature_dict[tweet.tweet_id]={"repeat":presence_of_repeat*1, "total_character":total_character,"ratio":ratio}
-            
-                        
-        return feature_dict
-
-    except Exception as e:
-        print("In readability")
-        print(str(e))
-    
-
-
-
+   
 
 
 
@@ -730,18 +605,6 @@ def get_features(data,generate):
     print(len(emoji_senti))
 
     
-    word_aff=word_affect(data)
-    print("9. Word affect done")
-    print(len(word_aff))
-    
-    read=readability(data)
-    print("10. readability done")
-    print(len(read))
-    
-    pros=prosodic(data)
-    print("11. prosodic variations done")
-    print(len(pros))
-    
     
     
     Vectors=[]
@@ -772,30 +635,6 @@ def get_features(data,generate):
         vec.extend(bigram_brown_feature[t.tweet_id])
 
         vec.extend(emoji_senti[t.tweet_id])
-        
-        
-        vec.append(word_aff[t.tweet_id]['vmax'])
-        vec.append(word_aff[t.tweet_id]['vmin'])
-        vec.append(word_aff[t.tweet_id]['vdistance'])
-        vec.append(word_aff[t.tweet_id]['amax'])
-        vec.append(word_aff[t.tweet_id]['amin'])
-        vec.append(word_aff[t.tweet_id]['adistance'])
-        vec.append(word_aff[t.tweet_id]['dmax'])
-        vec.append(word_aff[t.tweet_id]['dmin'])
-        vec.append(word_aff[t.tweet_id]['ddistance'])
-        
-        
-        vec.append(read[t.tweet_id]["mean"])
-        vec.append(read[t.tweet_id]["median"])
-        vec.extend(read[t.tweet_id]["mode"])
-        vec.append(read[t.tweet_id]["sigma"])
-        vec.append(read[t.tweet_id]["min"])
-        vec.append(read[t.tweet_id]["max"])
-        
-        vec.append(pros[t.tweet_id]["repeat"])
-        vec.append(pros[t.tweet_id]["total_character"])
-        vec.append(pros[t.tweet_id]["ratio"])
-        
 
         Vectors.append(vec)
 

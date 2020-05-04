@@ -184,7 +184,7 @@ def write_dict_to_json(dic, fn):
             new_dic[tweet_id] = ele
 
     with gzip.open(fn, 'w') as outf:
-        outf.write("{}".format(json.dumps(new_dic)).encode('utf8'))
+        outf.write("{}".format(json.dumps(dic)).encode('utf8'))
 
 
 def read_dict_from_json(fn):
