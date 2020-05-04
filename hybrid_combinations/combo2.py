@@ -1,6 +1,7 @@
 from utils import *
 
 from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from utils import read_dict_from_json
 import os
@@ -81,15 +82,21 @@ def fit_test_model(train, train_label, test, test_label, model):
 if __name__ == '__main__':
     path='./obtained_features/baselines/'
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B =get_hybrid_features(path)
-
+    
+    model1 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
+    model2 = GradientBoostingClassifier()
+    
     # task A
     print("==============TASK A======================")
-    model = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
     fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
-                   model=model)
+                   model=model1)
+    fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
+                   model=model2)
 
     # task B
     print("==============TASK B======================")
     model2 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
+    fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
+                   model=model1)
     fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
                    model=model2)
