@@ -76,7 +76,7 @@ def get_hybrid_features(path):
         
 
     
-def fit_test_model_svd(train, train_label, test, test_label, model,threshold=0.9):
+def fit_test_model_pca(train, train_label, test, test_label, model,threshold=0.9):
     pca = PCA()
     pca.fit(train)
     n=0
