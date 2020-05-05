@@ -36,7 +36,7 @@ def get_hybrid_features(path):
     feature_list={}
     feature_list['baselines']=['_unigram_feature','_unigram_feature', '_part_of_speech','_pronounciation','_capitalization','_tweet_whole_sentiment',
                   '_word_sentiment','_unigram_brown_feature','_bigram_brown_feature','_emoji_sentiment']
-    feature_list['behavior_model']=['_senti_bigram','_senti_trigram','_word_affect','_readability','_prosodic']
+
     feature_types=['baselines','behavior_model']
     
     
