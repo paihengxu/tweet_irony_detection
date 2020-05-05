@@ -1,0 +1,6 @@
+fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
+fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
+fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
+fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
+fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
+fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'

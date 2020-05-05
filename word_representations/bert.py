@@ -12,6 +12,7 @@ import torch
 # from tqdm import tqdm
 from pytorch_transformers import *
 from utils import *
+from utils.const import  *
 from sklearn.linear_model import LogisticRegression
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import classification_report, confusion_matrix
@@ -38,8 +39,11 @@ def get_bert_embeddings(corpus):
     '''
 
     # init pretrained model
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    model = BertModel.from_pretrained('bert-base-uncased')
+    # train_test dir: word_representations/train_test/
+    # combo: word_representations/combo/
+    # pre_trained: bert-base-uncased
+    tokenizer = BertTokenizer.from_pretrained('word_representations/combo/')
+    model = BertModel.from_pretrained('word_representations/combo/')
     bert_embed_features = {}
     for tweet in corpus:
         sent = tweet.tweet_text
@@ -61,13 +65,6 @@ def vectorize(feature_dict):
     return vecs
 
 def get_bert_feature(generate):
-    fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
-    fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
-    fp_test_A = 'test_TaskA/SemEval2018-T3_input_test_taskA.txt'
-    fp_test_B = 'test_TaskB/SemEval2018-T3_input_test_taskB.txt'
-    fp_labels_A = 'goldtest_TaskA/SemEval2018-T3_gold_test_taskA_emoji.txt'
-    fp_labels_B = 'goldtest_TaskB/SemEval2018-T3_gold_test_taskB_emoji.txt'
-
     pre_process_url = True  # Set to remove URLs
     pre_process_usr = True
     train_A = read_non_emoji_tweets(fp_train_A, "train", pre_process_url, pre_process_usr)
@@ -85,23 +82,23 @@ def get_bert_feature(generate):
 
     if generate:
         train_A_feature = get_bert_embeddings(train_A)
-        write_dict_to_json(train_A_feature, fn='train_A_bert.json.gz')
+        write_dict_to_json(train_A_feature, fn='train_A_bert_combo.json.gz')
 
         train_B_feature = get_bert_embeddings(train_B)
-        write_dict_to_json(train_B_feature, fn='train_B_bert.json.gz')
+        write_dict_to_json(train_B_feature, fn='train_B_bert_combo.json.gz')
 
         test_A_feature = get_bert_embeddings(test_A)
-        write_dict_to_json(test_A_feature, fn='test_A_bert.json.gz')
+        write_dict_to_json(test_A_feature, fn='test_A_bert_combo.json.gz')
 
         test_B_feature = get_bert_embeddings(test_B)
-        write_dict_to_json(test_B_feature, fn='test_B_bert.json.gz')
+        write_dict_to_json(test_B_feature, fn='test_B_bert_combo.json.gz')
 
     ### test the readability
     else:
-        train_A_feature = read_dict_from_json(fn='train_A_bert.json.gz')
-        train_B_feature =read_dict_from_json(fn='train_B_bert.json.gz')
-        test_A_feature =read_dict_from_json(fn='test_A_bert.json.gz')
-        test_B_feature =read_dict_from_json(fn='test_B_bert.json.gz')
+        train_A_feature = read_dict_from_json(fn='train_A_bert_combo.json.gz')
+        train_B_feature =read_dict_from_json(fn='train_B_bert_combo.json.gz')
+        test_A_feature =read_dict_from_json(fn='test_A_bert_combo.json.gz')
+        test_B_feature =read_dict_from_json(fn='test_B_bert_combo.json.gz')
 
     feats_tr_A = vectorize(train_A_feature)
     feats_tr_B = vectorize(train_B_feature)
@@ -116,7 +113,7 @@ def get_bert_feature(generate):
     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
 
-def fit_test_model(train, train_label, test, test_label, model):
+def fit_test_model(train, train_label, test, test_label, model,task):
     model.fit(train, train_label)
     # Predict
     # p_pred = model.predict_proba(feats_tst_A)
@@ -128,27 +125,26 @@ def fit_test_model(train, train_label, test, test_label, model):
 
     # print('score_:', score_, end='\n\n')
     # print('conf_m:', conf_m, sep='\n', end='\n\n')
-    # print('report:', report, sep='\n')
+    # print('report:', str(report), sep='\n')
 
+    print(f"{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",sep='\t')
 
-
-    print(f"Accuracy={report['accuracy']:.4},Precision={report['weighted avg']['precision']:.4}," \
-          f"Recall={report['weighted avg']['recall']:.4},f1-score={report['weighted avg']['f1-score']:.4}")
 
 if __name__ == '__main__':
     ### generate feature files for all dataset
     generate=False
     feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B=get_bert_feature(generate)
 
-    # task A
-    print("==============TASK A======================")
-    model = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
-    fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
-                   model=model)
+    C_param_range = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+    for c in C_param_range:
+        # task A
+        print(c)
+        model = LogisticRegression(solver='liblinear', penalty='l2', C=c, random_state=0)
+        fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A,
+                       model=model, task="Task A")
 
-    # task B
-    print("==============TASK B======================")
-    model2 = LogisticRegression(solver='liblinear', penalty='l2', random_state=0)
-    fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
-                   model=model2)
+        # task B
 
+        model2 = LogisticRegression(solver='liblinear', penalty='l2', C=c, random_state=0)
+        fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,
+                       model=model2, task="Task B")
