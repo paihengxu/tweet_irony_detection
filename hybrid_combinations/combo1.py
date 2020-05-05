@@ -1,23 +1,29 @@
 from utils import *
+import itertools
 
-from sklearn.linear_model import LogisticRegression
+
 from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.neural_network import MLPClassifier
+from sklearn.model_selection import GridSearchCV
 
 
 # def vectorize(ids,data_name,feature_list,path):
-def vectorize(ids,bert_dict,elmo_dict):
+def vectorize(ids,feat_dict,web):
     vecs=[]
     for id in ids:
         vec=[]
-        # Append bert
-        f = bert_dict.get(str(id))
-        vec.extend(f)
+        # Append bert, skipgram,cbow
+        if web in ['bert','cbow','skipgram']:
+            vec.extend(feat_dict.get(str(id)))
+
 
         # Append elmo
-        el = elmo_dict.get(str(id))
-        # vec.extend(el.get('context_independent_layer'))
-        # vec.extend(el.get('LSTM_layer1'))
-        vec.extend(el.get('LSTM_layer2'))
+        if web=='elmo':
+            el = feat_dict.get(str(id))
+            vec.extend(el.get('context_independent_layer'))
+            vec.extend(el.get('LSTM_layer1'))
+            vec.extend(el.get('LSTM_layer2'))
+
 
 
         vecs.append(vec)
@@ -25,7 +31,7 @@ def vectorize(ids,bert_dict,elmo_dict):
 
 
 
-def get_hybrid_features():
+def get_hybrid_features(web):
 
     fp_train_A = 'train/SemEval2018-T3-train-taskA.txt'
     fp_train_B = 'train/SemEval2018-T3-train-taskB.txt'
@@ -52,70 +58,104 @@ def get_hybrid_features():
     tst_A_ids = [t.tweet_id for t in test_A]
     tst_B_ids = [t.tweet_id for t in test_B]
 
+    train_A_web = None
+    train_B_web = None
+    test_A_web = None
+    test_B_web = None
 
-    #dict[tweet_id]= list
-    train_A_bert = read_dict_from_json(fn='train_A_bert.json.gz')
-    train_B_bert = read_dict_from_json(fn='train_B_bert.json.gz')
-    test_A_bert = read_dict_from_json(fn='test_A_bert.json.gz')
-    test_B_bert = read_dict_from_json(fn='test_B_bert.json.gz')
+    if web=='bert':
+        #dict[tweet_id]= list
+        train_A_web = read_dict_from_json(fn='train_A_bert.json.gz')
+        train_B_web = read_dict_from_json(fn='train_B_bert.json.gz')
+        test_A_web = read_dict_from_json(fn='test_A_bert.json.gz')
+        test_B_web = read_dict_from_json(fn='test_B_bert.json.gz')
 
-    '''
-    elmo_feature_dict[tweet.tweet_id] = {
-                'context_independent_layer' : np.concatenate([context_independent_layer_min, context_independent_layer_max, context_independent_layer_mean]),
-                'LSTM_layer1' : np.concatenate([LSTM_layer1_min, LSTM_layer1_max, LSTM_layer1_mean]),
-                'LSTM_layer2' : np.concatenate([LSTM_layer2_min, LSTM_layer2_max, LSTM_layer2_mean])
-            }
-    '''
-
-    train_A_elmo = read_dict_from_json('train_A_elmo.json.gz')
-    train_B_elmo = read_dict_from_json('train_B_elmo.json.gz')
-    test_A_elmo = read_dict_from_json('test_A_elmo.json.gz')
-    test_B_elmo = read_dict_from_json('test_B_elmo.json.gz')
-
-    feats_tr_A = vectorize(tr_A_ids, train_A_bert, train_A_elmo)
-    feats_tr_B = vectorize(tr_B_ids, train_B_bert, train_B_elmo)
-    feats_tst_A = vectorize(tst_A_ids,test_A_bert,test_A_elmo)
-    feats_tst_B = vectorize(tst_B_ids,test_B_bert,test_B_elmo)
+    if web=='elmo':
+        train_A_web = read_dict_from_json('train_A_elmo.json.gz')
+        train_B_web = read_dict_from_json('train_B_elmo.json.gz')
+        test_A_web = read_dict_from_json('test_A_elmo.json.gz')
+        test_B_web = read_dict_from_json('test_B_elmo.json.gz')
 
 
+    if web=='skipgram':
+        train_A_web = read_dict_from_json('train_A_skipgram.json.gz')
+        train_B_web = read_dict_from_json('train_B_skipgram.json.gz')
+        test_A_web = read_dict_from_json('test_A_skipgram.json.gz')
+        test_B_web = read_dict_from_json('test_B_skipgram.json.gz')
 
 
-    print(len(feats_tr_A), len(feats_tr_A[1]))
-    print(len(feats_tst_A), len(feats_tst_A[1]))
-    print(len(feats_tr_B), len(feats_tr_B[1]))
-    print(len(feats_tst_B), len(feats_tst_B[1]))
+    if web=='cbow':
+        train_A_web = read_dict_from_json('train_A_cbow.json.gz')
+        train_B_web = read_dict_from_json('train_B_cbow.json.gz')
+        test_A_web = read_dict_from_json('test_A_cbow.json.gz')
+        test_B_web = read_dict_from_json('test_B_cbow.json.gz')
+
+
+
+    feats_tr_A = vectorize(tr_A_ids, train_A_web,web)
+    feats_tr_B = vectorize(tr_B_ids, train_B_web,web)
+    feats_tst_A = vectorize(tst_A_ids,test_A_web,web)
+    feats_tst_B = vectorize(tst_B_ids,test_B_web,web)
+
+
+
+
+    # print(len(feats_tr_A), len(feats_tr_A[1]))
+    # print(len(feats_tst_A), len(feats_tst_A[1]))
+    # print(len(feats_tr_B), len(feats_tr_B[1]))
+    # print(len(feats_tst_B), len(feats_tst_B[1]))
 
     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
-
-def fit_test_model(train, train_label, test, test_label, model,task):
-    model.fit(train, train_label)
-    # Predict
-    # p_pred = model.predict_proba(feats_tst_A)
-    # Metrics
-    y_pred = model.predict(test)
-    score_ = model.score(test, test_label)
-    conf_m = confusion_matrix(test_label, y_pred)
-    report = classification_report(test_label, y_pred,output_dict=True)
-
-    # print('score_:', score_, end='\n\n')
-    # print('conf_m:', conf_m, sep='\n', end='\n\n')
-    # print('report:', str(report), sep='\n')
-
-    print(f"{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",sep='\t')
-
 if __name__ == '__main__':
-    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B =get_hybrid_features()
-    print(f'Task, Accuracy, Precision, Recall,F1-Score', sep='\t')
 
-    C_param_range = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
-    for c in C_param_range:
-    # task A
+    print(f"Embedding, Task, Accuracy, Precision, Recall,F1-Score", sep='\t')
+    # webs = ['bert', 'elmo', 'skipgram', 'cbow']
+    # webs=['bert','skipgram', 'cbow']
+    webs=["elmo"]
 
-        model = LogisticRegression(solver='liblinear', penalty='l2',C=c, random_state=0)
-        fit_test_model(train=feats_tr_A, train_label=tr_labels_A, test=feats_tst_A, test_label=tst_labels_A, model=model,task="Task A")
 
-    # task B
 
-        model2 = LogisticRegression(solver='liblinear', penalty='l2',C=c, random_state=0)
-        fit_test_model(train=feats_tr_B, train_label=tr_labels_B, test=feats_tst_B, test_label=tst_labels_B,model=model2,task="Task B")
+    for web in webs:
+        feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B = get_hybrid_features(web)
+        feat_count=len(feats_tr_A[1])
+        task="Task A"
+        '''
+        parameter_space = {
+            'hidden_layer_sizes': [(100,10),(int(feat_count/2),int(feat_count/4)),
+                                   (int(feat_count / 4), int(feat_count / 2)),(128,10),(256,64)],
+            'alpha': 10.0 ** -np.arange(1, 7),
+            'activation': ["logistic", "relu"],
+            'learning_rate': ["constant", "invscaling", "adaptive"]
+        }
+        '''
+        parameter_space = {
+            'hidden_layer_sizes': [(100,50),(100,),(50,100,50)],
+            'alpha': 10.0 ** -np.arange(1, 7),
+            'activation': ["relu"],
+            'learning_rate_init' : [0.001,0.1]
+        }
+
+
+
+        model=MLPClassifier(learning_rate='adaptive', early_stopping=True,random_state=0)
+        clf = GridSearchCV(model, parameter_space)
+        clf.fit(feats_tr_A,tr_labels_A)
+
+        # Best paramete set
+        print('Best parameters found:\n', clf.best_params_)
+
+        # All results
+        means = clf.cv_results_['mean_test_score']
+        stds = clf.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+            print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+
+        y_pred=clf.predict(feats_tst_A)
+        report = classification_report(tst_labels_A, y_pred, output_dict=True,zero_division=0)
+
+        print(f"{web},{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},"
+              f"{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",
+                 sep='\t')
+
+
