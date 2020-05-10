@@ -3,6 +3,7 @@ Work flow includes -
 2. Feature generation and saving
 3. Running specific combinations from report
 
+=================================================================================================================
 
 1. All needed packages are in cs666.yml and also requirements.txt
     1.1 conda env create -f cs666.yml
