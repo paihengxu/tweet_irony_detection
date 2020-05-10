@@ -111,34 +111,23 @@ if __name__ == '__main__':
 
     print(f"Embedding, Task, Accuracy, Precision, Recall,F1-Score", sep='\t')
     # webs = ['bert', 'elmo', 'skipgram', 'cbow']
-    # webs=['bert','skipgram', 'cbow']
-    webs=["elmo"]
-
+    webs=['bert','skipgram', 'cbow']
+    # webs=["elmo"]
 
 
     for web in webs:
         feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B = get_hybrid_features(web)
-        feat_count=len(feats_tr_A[1])
+        feat_count = len(feats_tr_A[1])
+        parameter_space = {
+            'hidden_layer_sizes': [(100, 50), (int(feat_count / 2), int(feat_count / 4)), (100,)],
+            'alpha': 10.0 ** -np.arange(1, 7),
+            'activation': ["relu", "logistic"],
+            'learning_rate_init': [0.001, 0.01, 0.1],
+            'random_state': [0]
+        }
+
         task="Task A"
-        '''
-        parameter_space = {
-            'hidden_layer_sizes': [(100,10),(int(feat_count/2),int(feat_count/4)),
-                                   (int(feat_count / 4), int(feat_count / 2)),(128,10),(256,64)],
-            'alpha': 10.0 ** -np.arange(1, 7),
-            'activation': ["logistic", "relu"],
-            'learning_rate': ["constant", "invscaling", "adaptive"]
-        }
-        '''
-        parameter_space = {
-            'hidden_layer_sizes': [(100,50),(100,),(50,100,50)],
-            'alpha': 10.0 ** -np.arange(1, 7),
-            'activation': ["relu"],
-            'learning_rate_init' : [0.001,0.1]
-        }
-
-
-
-        model=MLPClassifier(learning_rate='adaptive', early_stopping=True,random_state=0)
+        model=MLPClassifier(learning_rate='adaptive', early_stopping=True)
         clf = GridSearchCV(model, parameter_space)
         clf.fit(feats_tr_A,tr_labels_A)
 
@@ -153,9 +142,43 @@ if __name__ == '__main__':
 
         y_pred=clf.predict(feats_tst_A)
         report = classification_report(tst_labels_A, y_pred, output_dict=True,zero_division=0)
+        report_2 = classification_report(tst_labels_A, y_pred, zero_division=0)
+        print(report_2)
 
         print(f"{web},{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},"
               f"{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",
                  sep='\t')
+
+
+
+        feat_count_B = len(feats_tr_B[1])
+        parameter_space_B = {
+            'hidden_layer_sizes': [(100, 50), (int(feat_count_B / 2), int(feat_count_B / 4)), (100,)],
+            'alpha': 10.0 ** -np.arange(1, 7),
+            'activation': ["relu", "logistic"],
+            'learning_rate_init': [0.001, 0.01, 0.1],
+            'random_state': [0]
+        }
+        task = "Task B"
+        model_B = MLPClassifier(learning_rate='adaptive', early_stopping=True)
+        clf_B = GridSearchCV(model_B, parameter_space_B)
+        clf_B.fit(feats_tr_B, tr_labels_B)
+
+        # Best paramete set
+        print('Best parameters found:\n', clf.best_params_)
+
+        # All results
+        means = clf_B.cv_results_['mean_test_score']
+        stds = clf_B.cv_results_['std_test_score']
+        for mean, std, params in zip(means, stds, clf_B.cv_results_['params']):
+            print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+
+        y_pred = clf_B.predict(feats_tst_B)
+        report = classification_report(tst_labels_B, y_pred, output_dict=True, zero_division=0)
+        report_2 = classification_report(tst_labels_B, y_pred, zero_division=0)
+        print(report_2)
+        print(f"{web},{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},"
+              f"{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",
+              sep='\t')
 
 

@@ -124,15 +124,17 @@ if __name__ == '__main__':
 
         # Best paramete set
         # print('Best parameters found:\n', clf.best_params_)
-        '''
+        
         # All results
         means = clf.cv_results_['mean_test_score']
         stds = clf.cv_results_['std_test_score']
         for mean, std, params in zip(means, stds, clf.cv_results_['params']):
             print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
-        '''
+        
         y_pred=clf.predict(feats_tst_A)
         report = classification_report(tst_labels_A, y_pred, output_dict=True,zero_division=0)
+        report_2 = classification_report(tst_labels_A, y_pred,  zero_division=0)
+        print(report_2)
 
         print(f"{web},{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},"
               f"{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",
@@ -141,6 +143,7 @@ if __name__ == '__main__':
         task = "Task B"
 
         parameter_space = {'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100]}
+        # parameter_space = {'C': [ 0.1]}
 
         clf = GridSearchCV(LogisticRegression(solver='liblinear', penalty='l2',random_state=0), parameter_space)
         clf.fit(feats_tr_B, tr_labels_B)
@@ -148,15 +151,20 @@ if __name__ == '__main__':
         # Best paramete set
         # print('Best parameters found:\n', clf.best_params_)
 
-        '''
+
         # All results
         means = clf.cv_results_['mean_test_score']
         stds = clf.cv_results_['std_test_score']
         for mean, std, params in zip(means, stds, clf.cv_results_['params']):
             print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
-        '''
+
         y_pred = clf.predict(feats_tst_B)
+        acc=sum(y_pred==tst_labels_B)/len(tst_labels_B)
+        print(acc)
+
         report = classification_report(tst_labels_B, y_pred, output_dict=True, zero_division=0)
+        report_3 = classification_report(tst_labels_B, y_pred)
+        print(report_3)
 
         print(f"{web},{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},"
               f"{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",
