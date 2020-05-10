@@ -56,8 +56,13 @@ From top level project directory -
 
     3.5 Word Embeddings + MLP
         pyhton -m hybrid_combinations.combo1
+        
+For fine-tuning BERT, follow the instruction [here](https://github.com/huggingface/transformers/tree/master/examples/language-modeling)
+to get the updated language model, and replace the directory in the `word_representations/bert.py`.
+You could run `python -m word_representations.convert_tweet` to convert the given dataset into the format desired for fine-tuning BERT
 
     3.5 BERT Fine Tuned + LR
+       python -m word_representations.bert
 
     3.6 All features + LR
 

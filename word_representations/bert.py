@@ -4,6 +4,7 @@ import pandas as pd
 # import re
 # from tqdm import tqdm
 import warnings
+
 warnings.filterwarnings('ignore')
 # from sklearn.model_selection import train_test_split
 import torch
@@ -12,10 +13,11 @@ import torch
 # from tqdm import tqdm
 from pytorch_transformers import *
 from utils import *
-from utils.const import  *
+from utils.const import *
 from sklearn.linear_model import LogisticRegression
 from sklearn.dummy import DummyClassifier
 from sklearn.metrics import classification_report, confusion_matrix
+
 
 # TODO: fine-tuning BERT on Twitter data we have
 
@@ -42,8 +44,8 @@ def get_bert_embeddings(corpus):
     # train_test dir: word_representations/train_test/
     # combo: word_representations/combo/
     # pre_trained: bert-base-uncased
-    tokenizer = BertTokenizer.from_pretrained('word_representations/combo/')
-    model = BertModel.from_pretrained('word_representations/combo/')
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    model = BertModel.from_pretrained('bert-base-uncased')
     bert_embed_features = {}
     for tweet in corpus:
         sent = tweet.tweet_text
@@ -55,14 +57,16 @@ def get_bert_embeddings(corpus):
         # print('1', outputs[1].shape)
     return bert_embed_features
 
+
 def vectorize(feature_dict):
-    vecs=[]
+    vecs = []
     for k in list(feature_dict.keys()):
-        vec=[]
-        f=feature_dict.get(k)
+        vec = []
+        f = feature_dict.get(k)
         vec.extend(f)
         vecs.append(vec)
     return vecs
+
 
 def get_bert_feature(generate):
     pre_process_url = True  # Set to remove URLs
@@ -79,26 +83,25 @@ def get_bert_feature(generate):
     gold_B = get_label(fp_labels_B)
     tst_labels_B = [v for k, v in gold_B.items()]
 
-
     if generate:
         train_A_feature = get_bert_embeddings(train_A)
-        write_dict_to_json(train_A_feature, fn='train_A_bert_combo.json.gz')
+        write_dict_to_json(train_A_feature, fn='train_A_bert.json.gz')
 
         train_B_feature = get_bert_embeddings(train_B)
-        write_dict_to_json(train_B_feature, fn='train_B_bert_combo.json.gz')
+        write_dict_to_json(train_B_feature, fn='train_B_bert.json.gz')
 
         test_A_feature = get_bert_embeddings(test_A)
-        write_dict_to_json(test_A_feature, fn='test_A_bert_combo.json.gz')
+        write_dict_to_json(test_A_feature, fn='test_A_bert.json.gz')
 
         test_B_feature = get_bert_embeddings(test_B)
-        write_dict_to_json(test_B_feature, fn='test_B_bert_combo.json.gz')
+        write_dict_to_json(test_B_feature, fn='test_B_bert.json.gz')
 
     ### test the readability
     else:
-        train_A_feature = read_dict_from_json(fn='train_A_bert_combo.json.gz')
-        train_B_feature =read_dict_from_json(fn='train_B_bert_combo.json.gz')
-        test_A_feature =read_dict_from_json(fn='test_A_bert_combo.json.gz')
-        test_B_feature =read_dict_from_json(fn='test_B_bert_combo.json.gz')
+        train_A_feature = read_dict_from_json(fn='obtained_features/train_A_bert.json.gz')
+        train_B_feature = read_dict_from_json(fn='obtained_features/train_B_bert.json.gz')
+        test_A_feature = read_dict_from_json(fn='obtained_features/test_A_bert.json.gz')
+        test_B_feature = read_dict_from_json(fn='obtained_features/test_B_bert.json.gz')
 
     feats_tr_A = vectorize(train_A_feature)
     feats_tr_B = vectorize(train_B_feature)
@@ -113,7 +116,7 @@ def get_bert_feature(generate):
     return feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_label_B, tst_labels_A, tst_labels_B
 
 
-def fit_test_model(train, train_label, test, test_label, model,task):
+def fit_test_model(train, train_label, test, test_label, model, task):
     model.fit(train, train_label)
     # Predict
     # p_pred = model.predict_proba(feats_tst_A)
@@ -121,19 +124,27 @@ def fit_test_model(train, train_label, test, test_label, model,task):
     y_pred = model.predict(test)
     score_ = model.score(test, test_label)
     conf_m = confusion_matrix(test_label, y_pred)
-    report = classification_report(test_label, y_pred,output_dict=True)
+    report = classification_report(test_label, y_pred, output_dict=True)
 
     # print('score_:', score_, end='\n\n')
     # print('conf_m:', conf_m, sep='\n', end='\n\n')
     # print('report:', str(report), sep='\n')
-
-    print(f"{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",sep='\t')
+    print('acc:', sum(y_pred == test_label) / len(y_pred))
+    print('weighted')
+    print(
+        f"{task},{report['accuracy']:.4},{report['weighted avg']['precision']:.4},{report['weighted avg']['recall']:.4},{report['weighted avg']['f1-score']:.4}",
+        sep='\t')
+    print('macro')
+    print(
+        f"{task},{report['accuracy']:.4},{report['macro avg']['precision']:.4},{report['macro avg']['recall']:.4},{report['macro avg']['f1-score']:.4}",
+        sep='\t')
 
 
 if __name__ == '__main__':
     ### generate feature files for all dataset
-    generate=False
-    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B=get_bert_feature(generate)
+    generate = False
+    feats_tr_A, feats_tst_A, feats_tr_B, feats_tst_B, tr_labels_A, tr_labels_B, tst_labels_A, tst_labels_B = get_bert_feature(
+        generate)
 
     C_param_range = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
     for c in C_param_range:
