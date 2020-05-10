@@ -32,8 +32,8 @@ From top level project directory -
     2.3. Generate word embedding features
             BERT: python -m word_representations.bert
             ELMo: python -m word_representations.elmo
-            Skip-gram:
-            CBOW:
+            Skip-gram: python -m word_representations.skipgram
+            CBOW: python -m word_representations.cbow
 
             These are large files and couldn't be pushed to git. But inlucded in zipped code.
             These json.gz files should be in project top level directory
