@@ -3,7 +3,7 @@ Work flow includes -
 2. Feature generation and saving
 3. Running specific combinations from report
 
-=================================================================================================================
+============================================================================
 
 1. All needed packages are in cs666.yml and also requirements.txt
     1.1 conda env create -f cs666.yml
@@ -42,13 +42,22 @@ From top level project directory -
 
 3. Running classifiers and print metrics
 
+From top level project directory -
+
     3.1 Baseline + Logistic regression
+
     3.2 Baseline  + Behavior + Logistic regression
+
     3.3 Baseline + Behavior + PCA + logistic Regression
+
     3.4 Word Embeddings + Logistic Regression
         pyhton -m hybrid_combinations.combo1_lr
+
     3.5 Word Embeddings + MLP
         pyhton -m hybrid_combinations.combo1
+
     3.5 BERT Fine Tuned + LR
+
     3.6 All features + LR
+
     3.7 All features + PCA + LR
