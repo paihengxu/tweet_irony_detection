@@ -6,11 +6,11 @@ Work flow includes -
 ============================================================================
 
 1. All needed packages are in cs666.yml and also requirements.txt
-    1.1 conda env create -f cs666.yml
-    1.2 Download stanfordNLP package from https://stanfordnlp.github.io/CoreNLP/, and unzip the stanford-corenlp-full-2018-10-05 into root path
-        Activate stanfordNLP server with below commands or use run.sh
-        cd stanford-corenlp-full-2018-10-05;
-        java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 5000 -timeout 10000
+    * conda env create -f cs666.yml
+    * Download stanfordNLP package from https://stanfordnlp.github.io/CoreNLP/, and unzip the stanford-corenlp-full-2018-10-05 into root path
+        * Activate stanfordNLP server with below commands or use run.sh
+        * cd stanford-corenlp-full-2018-10-05;
+        * java -mx4g -cp "*" edu.stanford.nlp.pipeline.StanfordCoreNLPServer -port 5000 -timeout 10000
 
 2. Feature generation and saving
 For ease of experimenting with features. we generate the features and save them to compressed jsons individually.
